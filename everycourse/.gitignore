@@ -1,0 +1,139 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# The .vscode folder contains launch configuration and tasks you configure in
+# VS Code which you may wish to be included in version control, so this line
+# is commented out by default.
+#.vscode/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+# ==========================================
+# 빌드 산출물 및 대용량 파일 제외 (EveryCourse)
+# ==========================================
+
+# Flutter/Android 빌드 산출물
+*.apk
+*.aab
+*.ipa
+*.app
+*.exe
+*.deb
+*.dmg
+*.rpm
+*.msi
+*.pkg
+build/
+.gradle/
+gradle-app.setting
+
+# 대용량 미디어 파일 (500MB+ 가능성)
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.webm
+*.3gp
+*.flv
+*.wmv
+*.m4v
+*.iso
+*.dmg
+*.img
+
+# 대용량 오디오 파일
+*.wav
+*.flac
+*.aac
+*.m4a
+*.wma
+
+# 대용량 이미지/디자인 파일
+*.psd
+*.ai
+*.eps
+*.tiff
+*.tif
+*.bmp
+*.raw
+*.cr2
+*.nef
+*.arw
+*.dng
+
+# 압축 파일
+*.zip
+*.rar
+*.7z
+*.tar
+*.tar.gz
+*.tar.bz2
+*.gz
+
+# 데이터베이스 덤프
+*.sql
+*.db
+*.sqlite
+*.sqlite3
+*.dump
+
+# 로그 파일 (대용량 가능성)
+logs/
+*.log
+*.out
+*.err
+crash_dumps/
+
+# 임시/캐시 파일
+*.tmp
+*.temp
+*.cache
+*.bak
+*.backup
+node_modules/
+.pub-cache/
+
+# 민감 정보만 제외 (팀원 협업을 위해 일반 환경설정은 포함)
+secrets.json
+*.keystore
+*.jks
+key.properties
+google-services.json
+GoogleService-Info.plist
+firebase_options.dart
