@@ -17,7 +17,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'EveryCourse - 모든 강의를 한 곳에'),
+      home: const MyHomePage(title: 'EveryCourse'),
     );
   }
 }

@@ -1,5 +1,10 @@
 // EveryCourse 프로젝트 전역 설정
 
+// Firebase Google Services 플러그인 추가
+plugins {
+    id 'com.google.gms.google-services' version '4.4.3' apply false
+}
+
 // Groovy 유틸리티 함수들
 def getVersionName() {
     return "1.0.0"
