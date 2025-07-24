@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1058242387574",
+    "project_id": "everycourse-911af",
+    "storage_bucket": "everycourse-911af.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1058242387574:android:9e5a9a8ac5d2fbfc074957",
+        "android_client_info": {
+          "package_name": "com.example.everycourse"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyChMg_-dGP2CZrLtWMcnuocqYK__TKBs8k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -33,6 +33,16 @@ migrate_working_dir/
 .pub/
 /build/
 
+# Flutter 대용량 빌드 파일 제외
+**/.dart_tool/
+**/build/
+**/*.dill
+**/*.track.dill
+**/kernel_blob.bin
+**/isolate_snapshot_data
+**/*.cache.dill
+**/zip-cache/
+
 # Symbolication related
 app.*.symbols
 
@@ -53,15 +63,23 @@ app.*.map.json
 *.aab
 *.ipa
 *.app
-*.exe
-*.deb
-*.dmg
-*.rpm
-*.msi
-*.pkg
 build/
-.gradle/
-gradle-app.setting
+
+# Android 네이티브 라이브러리 (대용량)
+**/lib/x86_64/libflutter.so
+**/lib/arm64-v8a/libflutter.so
+**/lib/armeabi-v7a/libflutter.so
+**/intermediates/
+**/outputs/
+**/incremental/
+**/merged_native_libs/
+**/stripped_native_libs/
+**/compressed_assets/
+
+# Android 관련 (중복 제거)
+/android/app/debug
+/android/app/profile
+/android/app/release
 
 # 대용량 미디어 파일 (500MB+ 가능성)
 *.mp4
@@ -134,6 +152,6 @@ secrets.json
 *.keystore
 *.jks
 key.properties
-google-services.json
+# google-services.json - 팀 공유를 위해 Git에 포함
 GoogleService-Info.plist
 firebase_options.dart
