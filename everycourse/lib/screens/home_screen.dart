@@ -31,9 +31,16 @@ class _HomeScreenState extends State<HomeScreen> {
           _counter = data['value'] ?? 0;
         });
         print('Firestore에서 카운터 값 로드: $_counter');
+      } else {
+        print('Firestore 문서가 존재하지 않습니다. 기본값 0으로 시작합니다.');
       }
     } catch (e) {
       print('Firestore 읽기 오류: $e');
+      if (e.toString().contains('NOT_FOUND') || e.toString().contains('does not exist')) {
+        print('⚠️  Firestore 데이터베이스가 생성되지 않았습니다.');
+        print('💡 Firebase Console에서 Firestore 데이터베이스를 생성해주세요:');
+        print('🔗 https://console.firebase.google.com/project/everycourse-911af/firestore');
+      }
     }
   }
 
@@ -48,6 +55,11 @@ class _HomeScreenState extends State<HomeScreen> {
       print('Firestore에 카운터 값 저장: $_counter');
     } catch (e) {
       print('Firestore 저장 오류: $e');
+      if (e.toString().contains('NOT_FOUND') || e.toString().contains('does not exist')) {
+        print('⚠️  Firestore 데이터베이스가 생성되지 않았습니다.');
+        print('💡 Firebase Console에서 Firestore 데이터베이스를 생성해주세요:');
+        print('🔗 https://console.firebase.google.com/project/everycourse-911af/firestore');
+      }
     }
   }
 
