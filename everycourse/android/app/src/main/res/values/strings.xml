@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <!-- 카카오 네이티브 앱 키를 여기에 입력하세요 -->
-    <string name="kakao_app_key">YOUR_KAKAO_NATIVE_APP_KEY</string>
-</resources>
