@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart' as kakao;
-import 'package:flutter_naver_login/flutter_naver_login.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -136,40 +134,6 @@ class _AuthScreenState extends State<AuthScreen> {
                   ),
                 ),
               ),
-              
-              const SizedBox(height: 10),
-              
-              // 카카오 로그인 버튼
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: _isLoading ? null : _signInWithKakao,
-                  icon: const Icon(Icons.chat_bubble, color: Colors.brown),
-                  label: const Text('카카오로 로그인'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFFEE500),
-                    foregroundColor: Colors.black,
-                    padding: const EdgeInsets.all(15),
-                  ),
-                ),
-              ),
-              
-              const SizedBox(height: 10),
-              
-              // 네이버 로그인 버튼
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: _isLoading ? null : _signInWithNaver,
-                  icon: const Text('N', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                  label: const Text('네이버로 로그인'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF03C75A),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.all(15),
-                  ),
-                ),
-              ),
             ],
           ),
         ),
@@ -258,82 +222,6 @@ class _AuthScreenState extends State<AuthScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Google 로그인 실패: $e')),
-        );
-      }
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
-    }
-  }
-
-  Future<void> _signInWithKakao() async {
-    setState(() {
-      _isLoading = true;
-    });
-
-    try {
-      // 카카오톡 앱이 설치되어 있는지 확인
-      if (await kakao.isKakaoTalkInstalled()) {
-        await kakao.UserApi.instance.loginWithKakaoTalk();
-      } else {
-        await kakao.UserApi.instance.loginWithKakaoAccount();
-      }
-
-      // 카카오 사용자 정보 가져오기
-      final kakao.User kakaoUser = await kakao.UserApi.instance.me();
-      
-      // Firebase Custom Token 생성 (서버에서 처리해야 함)
-      // 현재는 익명 로그인으로 대체
-      await FirebaseAuth.instance.signInAnonymously();
-      
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('카카오 로그인 성공: ${kakaoUser.kakaoAccount?.profile?.nickname ?? "사용자"}')),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('카카오 로그인 실패: $e')),
-        );
-      }
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
-    }
-  }
-
-  Future<void> _signInWithNaver() async {
-    setState(() {
-      _isLoading = true;
-    });
-
-    try {
-      final NaverLoginResult result = await FlutterNaverLogin.logIn();
-      
-      if (result.status == NaverLoginStatus.loggedIn) {
-        // Firebase Custom Token 생성 (서버에서 처리해야 함)
-        // 현재는 익명 로그인으로 대체
-        await FirebaseAuth.instance.signInAnonymously();
-        
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('네이버 로그인 성공: ${result.account.nickname}')),
-          );
-        }
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('네이버 로그인이 취소되었습니다')),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('네이버 로그인 실패: $e')),
         );
       }
     } finally {

@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart' hide User;
-import 'package:flutter_naver_login/flutter_naver_login.dart';
 import 'screens/auth_screen.dart';
 import 'screens/home_screen.dart';
 
@@ -12,16 +10,6 @@ void main() async {
   
   // Firebase 초기화
   await Firebase.initializeApp();
-  
-  // 카카오 SDK 초기화 (실제 네이티브 앱 키로 교체 필요)
-  KakaoSdk.init(nativeAppKey: 'YOUR_KAKAO_NATIVE_APP_KEY');
-  
-  // 네이버 로그인 초기화 (실제 클라이언트 ID/Secret으로 교체 필요)
-  await FlutterNaverLogin.initSdk(
-    clientId: "YOUR_NAVER_CLIENT_ID",
-    clientSecret: "YOUR_NAVER_CLIENT_SECRET",
-    clientName: "EveryCourse",
-  );
   
   // Debug 모드에서도 Analytics 활성화
   await FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(true);
