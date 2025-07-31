@@ -63,9 +63,16 @@ dependencies {
     // Firebase Analytics (기본)
     implementation 'com.google.firebase:firebase-analytics'
     
+    // Firebase Authentication
+    implementation 'com.google.firebase:firebase-auth'
+    
+    // FirebaseUI for Authentication (소셜 로그인 UI) - BoM 적용 안됨, 버전 필수
+    implementation 'com.firebaseui:firebase-ui-auth:9.0.0'
+    
+    // Firebase Firestore (현재 main.dart에서 사용 중)
+    implementation 'com.google.firebase:firebase-firestore'
+    
     // 필요한 다른 Firebase 서비스들 (선택사항)
-    // implementation 'com.google.firebase:firebase-auth'
-    // implementation 'com.google.firebase:firebase-firestore'
     // implementation 'com.google.firebase:firebase-storage'
 }
 
