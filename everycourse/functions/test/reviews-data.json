@@ -1,0 +1,31 @@
+{
+  "reviews": {
+    "review-001": {
+      "userId": "user-001",
+      "courseId": "test-course-hashtag",
+      "rating": 5,
+      "comment": "정말 로맨틱한 코스였어요! 추천합니다",
+      "createdAt": {
+        ".sv": "timestamp"
+      }
+    },
+    "review-002": {
+      "userId": "user-002",
+      "courseId": "test-course-hashtag",
+      "rating": 4,
+      "comment": "좋았지만 비용이 좀 많이 들었어요",
+      "createdAt": {
+        ".sv": "timestamp"
+      }
+    },
+    "review-003": {
+      "userId": "user-003",
+      "courseId": "test-course-hongdae",
+      "rating": 5,
+      "comment": "홍대 분위기 최고! 젊은 커플들에게 강추",
+      "createdAt": {
+        ".sv": "timestamp"
+      }
+    }
+  }
+}

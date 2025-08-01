@@ -1,0 +1,37 @@
+{
+  "users": {
+    "user-001": {
+      "email": "test1@example.com",
+      "displayName": "김철수",
+      "age": 25,
+      "gender": "male",
+      "interests": ["데이트", "카페", "영화"],
+      "isStudent": false,
+      "createdAt": {
+        ".sv": "timestamp"
+      }
+    },
+    "user-002": {
+      "email": "test2@example.com", 
+      "displayName": "이영희",
+      "age": 23,
+      "gender": "female",
+      "interests": ["쇼핑", "맛집", "여행"],
+      "isStudent": true,
+      "createdAt": {
+        ".sv": "timestamp"
+      }
+    },
+    "user-003": {
+      "email": "test3@example.com",
+      "displayName": "박민수",
+      "age": 27,
+      "gender": "male", 
+      "interests": ["클럽", "술", "게임"],
+      "isStudent": false,
+      "createdAt": {
+        ".sv": "timestamp"
+      }
+    }
+  }
+}

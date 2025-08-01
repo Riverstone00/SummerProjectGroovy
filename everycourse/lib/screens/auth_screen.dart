@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import '../services/user_service.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -12,6 +13,7 @@ class AuthScreen extends StatefulWidget {
 class _AuthScreenState extends State<AuthScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _userService = UserService(); // UserService 인스턴스 추가
   bool _isLoading = false;
   bool _isSignUp = false;
 
@@ -155,12 +157,20 @@ class _AuthScreenState extends State<AuthScreen> {
 
     try {
       if (_isSignUp) {
-        await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        // UserService를 통한 회원가입 (Firestore 프로필 생성 포함)
+        await _userService.signUpWithEmailAndPassword(
           email: _emailController.text.trim(),
           password: _passwordController.text,
         );
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('회원가입이 완료되었습니다! 🎉')),
+          );
+        }
       } else {
-        await FirebaseAuth.instance.signInWithEmailAndPassword(
+        // UserService를 통한 로그인 (Firestore 프로필 동기화 포함)
+        await _userService.signInWithEmailAndPassword(
           email: _emailController.text.trim(),
           password: _passwordController.text,
         );
@@ -180,7 +190,14 @@ class _AuthScreenState extends State<AuthScreen> {
 
   Future<void> _signInAnonymously() async {
     try {
-      await FirebaseAuth.instance.signInAnonymously();
+      // UserService를 통한 익명 로그인 (Firestore 프로필 생성 포함)
+      await _userService.signInAnonymously();
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('익명으로 로그인되었습니다')),
+        );
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -196,19 +213,37 @@ class _AuthScreenState extends State<AuthScreen> {
     });
 
     try {
+      print('🔄 Starting Google Sign-In process...');
+      
+      // Google Sign-In 설정 (웹 클라이언트 ID 명시)
+      final GoogleSignIn googleSignIn = GoogleSignIn(
+        // Firebase 콘솔에서 가져온 웹 클라이언트 ID
+        clientId: '1058242387574-d5nsfus1gt0hh09i13mqnqc48ggn37nc.apps.googleusercontent.com',
+      );
+      
       // Google Sign-In 트리거
-      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
       
       // 사용자가 로그인을 취소한 경우
       if (googleUser == null) {
+        print('❌ Google Sign-In cancelled by user');
         setState(() {
           _isLoading = false;
         });
         return;
       }
 
+      print('✅ Google Sign-In successful for: ${googleUser.email}');
+
       // 인증 정보 얻기
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      print('🔄 Getting Google authentication details...');
+      final GoogleSignInAuthentication googleAuth = googleUser.authentication;
+
+      if (googleAuth.accessToken == null || googleAuth.idToken == null) {
+        throw Exception('Failed to get Google authentication tokens');
+      }
+
+      print('✅ Got Google auth tokens');
 
       // Firebase 자격 증명 생성
       final credential = GoogleAuthProvider.credential(
@@ -216,9 +251,25 @@ class _AuthScreenState extends State<AuthScreen> {
         idToken: googleAuth.idToken,
       );
 
-      // Firebase로 로그인
-      await FirebaseAuth.instance.signInWithCredential(credential);
+      print('🔄 Signing in to Firebase with Google credentials...');
+
+      // UserService를 통한 구글 로그인 (Firestore 프로필 생성 포함)
+      await _userService.signInWithGoogle(credential);
+      
+      print('✅ Firebase Google Sign-In successful!');
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Google 로그인 성공! 🎉')),
+        );
+      }
     } catch (e) {
+      print('❌ Google Sign-In error: $e');
+      if (e.toString().contains('ApiException: 10')) {
+        print('🚨 Google Sign-In 설정 오류! Firebase 콘솔에서 SHA-1 지문을 확인해주세요.');
+        print('🔧 필요한 SHA-1: 7D:B3:88:ED:44:26:C5:22:CD:69:52:F8:FF:DE:98:68:D4:3E:D8:BB');
+      }
+      
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Google 로그인 실패: $e')),
