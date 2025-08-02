@@ -69,7 +69,7 @@ class MainScreen extends StatelessWidget {
           Stack(
             children: [
               Image.asset(
-                'assets/banner.jpg',
+                'assets/images/banner.jpg',
                 width: double.infinity,
                 height: 180,
                 fit: BoxFit.cover,
@@ -209,21 +209,21 @@ class MainScreen extends StatelessWidget {
   String _getImagePathByLabel(String label) {
     switch (label) {
       case '서울':
-        return 'assets/seoul.jpg';
+        return 'assets/images/seoul.jpg';
       case '경기':
-        return 'assets/gi.jpg';
+        return 'assets/images/gi.jpg';
       case '부산':
-        return 'assets/busan.jpg';
+        return 'assets/images/busan.jpg';
       case '인천':
-        return 'assets/incheon.jpg';
+        return 'assets/images/incheon.jpg';
       case '감성 카페':
-        return 'assets/caffee.jpg';
+        return 'assets/images/caffee.jpg';
       case '연인과 걷기 좋은 장소':
-        return 'assets/walk.jpg';
+        return 'assets/images/walk.jpg';
       case '인생 포토존':
-        return 'assets/photo.jpg';
+        return 'assets/images/photo.jpg';
       default:
-        return 'assets/sample.jpg';
+        return 'assets/images/sample.jpg';
     }
   }
 
