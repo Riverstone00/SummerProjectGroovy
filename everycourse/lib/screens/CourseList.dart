@@ -18,7 +18,7 @@ class _CourseListState extends State<CourseList> {
       "location": "동국대학교",
       "price": "5만원 이하",
       "time": "3.5시간",
-      "image": "assets/test.jpg"
+      "image": "assets/images/test.jpg"
     },
     {
       "title": "취하고 싶은 하루",
