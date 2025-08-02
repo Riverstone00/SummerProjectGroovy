@@ -41,6 +41,9 @@ dependencies:
   firebase_auth: ^6.0.0
   google_sign_in: ^6.3.0
   cloud_firestore: ^6.0.0
+  
+  # 국제화 및 형식 지정
+  intl: ^0.19.0
 
 dev_dependencies:
   flutter_test:
@@ -59,21 +62,8 @@ dev_dependencies:
 # The following section is specific to Flutter packages.
 flutter:
   assets:
-    - assets/images/banner.jpg
-    - assets/images/busan.jpg
-    - assets/images/caffee.jpg
-    - assets/images/dongguk1.jpg
-    - assets/images/dongguk2.jpg
-    - assets/images/gi.jpg
-    - assets/images/honggik.jpg
-    - assets/images/incheon.jpg
-    - assets/images/konkuk.jpg
-    - assets/images/photo.jpg
-    - assets/images/seoul.jpg
-    - assets/images/sung.jpg
-    - assets/images/test.jpg
-    - assets/images/walk.jpg
-    - assets/images/yonsei.jpg
+    - assets/images/
+
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
