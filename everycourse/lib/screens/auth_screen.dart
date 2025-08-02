@@ -237,7 +237,7 @@ class _AuthScreenState extends State<AuthScreen> {
 
       // 인증 정보 얻기
       print('🔄 Getting Google authentication details...');
-      final GoogleSignInAuthentication googleAuth = googleUser.authentication;
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
 
       if (googleAuth.accessToken == null || googleAuth.idToken == null) {
         throw Exception('Failed to get Google authentication tokens');
