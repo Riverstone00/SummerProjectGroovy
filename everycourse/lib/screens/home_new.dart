@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'SeoulPage.dart';
-import 'FullUniv.dart';
-import 'FullCourse.dart';
+import 'seoul_page.dart';
+import 'full_univ.dart';
+import 'full_course.dart';
 
 void main() {
   runApp(const DatingApp());

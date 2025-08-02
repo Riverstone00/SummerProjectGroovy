@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'CourseDetail.dart';
+import 'course_detail.dart';
 
 class CourseList extends StatefulWidget {
   final String universityName;
