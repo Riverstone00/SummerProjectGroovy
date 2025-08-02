@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'CourseList.dart'; // 코스 리스트 페이지 import
+import 'course_list.dart'; // 코스 리스트 페이지 import
 
 class SeoulPage extends StatelessWidget {
   const SeoulPage({super.key});
@@ -40,7 +40,7 @@ class SeoulPage extends StatelessWidget {
         "rating": 4.8,
         "review": 783,
         "desc": "호수와 캠퍼스가 어우러져 분위기 최고! 넓고 쾌적한 캠퍼스로 산책 코스로 추천.",
-        "image": "assets/imgaes/konkuk.jpg",
+        "image": "assets/images/konkuk.jpg",
       },
     ];
 
