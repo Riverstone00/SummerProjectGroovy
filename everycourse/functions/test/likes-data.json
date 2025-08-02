@@ -1,0 +1,25 @@
+{
+  "likes": {
+    "like-001": {
+      "userId": "user-001",
+      "courseId": "test-course-hashtag",
+      "createdAt": {
+        ".sv": "timestamp"
+      }
+    },
+    "like-002": {
+      "userId": "user-002",
+      "courseId": "test-course-hashtag",
+      "createdAt": {
+        ".sv": "timestamp"
+      }
+    },
+    "like-003": {
+      "userId": "user-001",
+      "courseId": "test-course-hongdae",
+      "createdAt": {
+        ".sv": "timestamp"
+      }
+    }
+  }
+}

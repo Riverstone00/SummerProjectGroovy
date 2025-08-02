@@ -1,0 +1,42 @@
+{
+  "__collections__": {
+    "courses": {
+      "test-course-hashtag": {
+        "title": "강남 로맨틱 데이트 코스",
+        "hashtags": ["#강남데이트", "#로맨틱", "#저녁식사", "#카페", "#야경"],
+        "location": "강남구",
+        "category": "데이트",
+        "placeId": "place-001",
+        "description": "강남에서 즐기는 로맨틱한 저녁 데이트 코스",
+        "createdAt": {
+          "__datatype__": "timestamp",
+          "value": "2025-08-01T04:00:00.000Z"
+        }
+      },
+      "test-course-hongdae": {
+        "title": "홍대 활기찬 데이트",
+        "hashtags": ["#홍대", "#클럽", "#술집", "#젊은", "#신나는"],
+        "location": "홍대",
+        "category": "데이트",
+        "placeId": "place-002",
+        "description": "홍대에서 즐기는 활기찬 밤 데이트",
+        "createdAt": {
+          "__datatype__": "timestamp",
+          "value": "2025-08-01T04:00:00.000Z"
+        }
+      },
+      "test-course-nature": {
+        "title": "한강 산책 데이트",
+        "hashtags": ["#한강", "#산책", "#자연", "#피크닉", "#여유"],
+        "location": "한강공원",
+        "category": "아웃도어",
+        "placeId": "place-003",
+        "description": "한강에서 자연을 만끽하는 여유로운 데이트",
+        "createdAt": {
+          "__datatype__": "timestamp",
+          "value": "2025-08-01T04:00:00.000Z"
+        }
+      }
+    }
+  }
+}

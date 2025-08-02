@@ -1,0 +1,43 @@
+{
+  "users": {
+    "user1": {
+      "email": "user1@gmail.com",
+      "displayName": "John Doe",
+      "age": 25,
+      "gender": "male",
+      "isStudent": false
+    },
+    "user-student": {
+      "email": "student@university.ac.kr",
+      "displayName": "Student Kim",
+      "age": 21,
+      "gender": "female",
+      "isStudent": false,
+      "emailVerified": false,
+      "studentVerificationStatus": "none"
+    },
+    "user-verified-student": {
+      "email": "verified@snu.ac.kr",
+      "displayName": "Seoul Kim",
+      "age": 22,
+      "gender": "male",
+      "isStudent": true,
+      "emailVerified": true,
+      "studentVerificationStatus": "verified",
+      "universityEmail": "verified@snu.ac.kr"
+    }
+  },
+  "courses": {
+    "course-student": {
+      "title": "Dating Basics for Students",
+      "instructor": "Seoul Kim",
+      "description": "A guide for healthy dating for university students",
+      "category": "Dating",
+      "createdBy": "user-verified-student",
+      "isVerifiedInstructor": true,
+      "showStudentBadge": true,
+      "duration": "2 weeks",
+      "difficulty": "beginner"
+    }
+  }
+}

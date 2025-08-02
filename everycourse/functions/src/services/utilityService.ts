@@ -4,29 +4,30 @@ export class UtilityService {
   private db = admin.firestore();
 
   /**
-   * 검색 인덱스를 업데이트합니다
+   * 해시태그 기반 검색 인덱스를 업데이트합니다
    */
   async updateSearchIndex(courseId: string, courseData: any): Promise<void> {
     try {
       const searchRef = this.db.collection('searchIndex').doc(courseId);
       
-      // 검색용 키워드 생성
+      // 해시태그 기반 검색용 키워드 생성
       const searchKeywords = this.generateSearchKeywords(courseData);
       
       const searchIndex = {
         courseId,
         title: courseData.title || '',
-        description: courseData.description || '',
-        tags: courseData.tags || [],
+        hashtags: courseData.hashtags || [], // 해시태그 배열
+        tags: courseData.tags || [], // 기존 태그 (하위 호환성)
         location: courseData.location || '',
         category: courseData.category || '',
-        keywords: searchKeywords,
+        keywords: searchKeywords, // 검색용 키워드
+        placeId: courseData.placeId || '', // 장소 ID
         createdAt: courseData.createdAt || admin.firestore.FieldValue.serverTimestamp(),
         lastIndexed: admin.firestore.FieldValue.serverTimestamp()
       };
       
       await searchRef.set(searchIndex);
-      console.log(`Search index updated for course ${courseId}`);
+      console.log(`Hashtag-based search index updated for course ${courseId}`);
     } catch (error) {
       console.error(`Error updating search index for ${courseId}:`, error);
       throw error;
@@ -34,41 +35,48 @@ export class UtilityService {
   }
 
   /**
-   * 검색용 키워드를 생성합니다
+   * 해시태그 기반 검색용 키워드를 생성합니다
    */
   private generateSearchKeywords(courseData: any): string[] {
     const keywords = new Set<string>();
     
-    // 제목에서 키워드 추출
-    if (courseData.title) {
-      const titleWords = courseData.title.toLowerCase().split(/\s+/);
-      titleWords.forEach((word: string) => {
-        if (word.length > 1) {
-          keywords.add(word);
+    // 해시태그 추가 (메인 검색 기준)
+    if (courseData.hashtags && Array.isArray(courseData.hashtags)) {
+      courseData.hashtags.forEach((hashtag: string) => {
+        // # 제거하고 소문자로 변환
+        const cleanTag = hashtag.replace(/^#/, '').toLowerCase().trim();
+        if (cleanTag.length > 0) {
+          keywords.add(cleanTag);
+          // 해시태그의 부분 문자열도 추가 (더 나은 검색을 위해)
+          if (cleanTag.length > 2) {
+            for (let i = 0; i < cleanTag.length - 1; i++) {
+              keywords.add(cleanTag.substring(i));
+            }
+          }
         }
       });
     }
     
-    // 설명에서 키워드 추출
-    if (courseData.description) {
-      const descWords = courseData.description.toLowerCase().split(/\s+/);
-      descWords.forEach((word: string) => {
-        if (word.length > 2) {
-          keywords.add(word);
-        }
-      });
-    }
-    
-    // 태그 추가
+    // 기존 태그도 추가 (하위 호환성)
     if (courseData.tags && Array.isArray(courseData.tags)) {
       courseData.tags.forEach((tag: string) => {
         keywords.add(tag.toLowerCase());
       });
     }
     
-    // 위치 정보 추가
+    // 카테고리 추가 (보조 검색)
+    if (courseData.category) {
+      keywords.add(courseData.category.toLowerCase());
+    }
+    
+    // 위치 정보 추가 (지역 기반 검색)
     if (courseData.location) {
       keywords.add(courseData.location.toLowerCase());
+    }
+    
+    // 기본 제목도 키워드에 포함 (최소한의 제목 검색 지원)
+    if (courseData.title) {
+      keywords.add(courseData.title.toLowerCase());
     }
     
     return Array.from(keywords);
