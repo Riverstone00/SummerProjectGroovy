@@ -1,20 +1,79 @@
 import 'package:flutter/material.dart';
+import 'package:everycourse/services/user_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 
-class MyPageScreen extends StatelessWidget {
+class MyPageScreen extends StatefulWidget {
   const MyPageScreen({super.key});
 
   @override
+  State<MyPageScreen> createState() => _MyPageScreenState();
+}
+
+class _MyPageScreenState extends State<MyPageScreen> {
+  final UserService _userService = UserService();
+  String userName = '사용자';
+  String profileImageUrl = '';
+  bool isStudentVerified = false;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserProfile();
+  }
+
+  // 사용자 프로필 정보 로드
+  Future<void> _loadUserProfile() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        setState(() {
+          _isLoading = false;
+        });
+        return;
+      }
+
+      // Firestore에서 사용자 프로필 정보 가져오기
+      final userProfile = await _userService.getCurrentUserProfile();
+      
+      if (userProfile != null && userProfile.exists) {
+        final data = userProfile.data() as Map<String, dynamic>?;
+        
+        setState(() {
+          userName = data?['displayName'] ?? user.displayName ?? '사용자';
+          profileImageUrl = data?['photoURL'] ?? user.photoURL ?? '';
+          isStudentVerified = data?['isStudentVerified'] ?? false;
+          _isLoading = false;
+        });
+      } else {
+        setState(() {
+          userName = user.displayName ?? '사용자';
+          profileImageUrl = user.photoURL ?? '';
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      print('❌ Error loading user profile: $e');
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // 예시 데이터 (실제 앱에서는 사용자 정보/인증 여부를 Provider 등으로 관리)
-    final String userName = '홍길동';
-    final String profileImageUrl = '';
-    final bool isStudentVerified = true;
 
     return Scaffold(
       backgroundColor: const Color(0xFFFEF7FF),
       body: SafeArea(
-        child: Column(
+        child: _isLoading
+            ? const Center(
+                child: CircularProgressIndicator(
+                  color: Color(0xFFD391FF),
+                ),
+              )
+            : Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 32),
@@ -82,6 +141,49 @@ class MyPageScreen extends StatelessWidget {
                     leading: const Icon(Icons.lock_outline, color: Color(0xFFD391FF)),
                     title: const Text('Change password', style: TextStyle(color: Color(0xFFD391FF))),
                     onTap: () {},
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.logout, color: Color(0xFFD391FF)),
+                    title: const Text('로그아웃', style: TextStyle(color: Color(0xFFD391FF))),
+                    onTap: () async {
+                      // 로그아웃 확인 다이얼로그 표시
+                      final confirm = await showDialog<bool>(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: const Text('로그아웃'),
+                          content: const Text('정말 로그아웃 하시겠습니까?'),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, false),
+                              child: const Text('취소'),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, true),
+                              child: const Text('로그아웃'),
+                            ),
+                          ],
+                        ),
+                      );
+                      
+                      // 사용자가 확인을 선택하면 로그아웃 실행
+                      if (confirm == true) {
+                        try {
+                          final userService = UserService();
+                          await userService.signOut();
+                          
+                          // 로그아웃 후 인증 상태가 변경되어 자동으로 AuthScreen으로 이동됩니다
+                          // 추가적인 네비게이션 처리는 필요하지 않습니다
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('로그아웃 되었습니다')),
+                          );
+                        } catch (e) {
+                          // 로그아웃 실패 시 오류 메시지 표시
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('로그아웃 실패: $e')),
+                          );
+                        }
+                      }
+                    },
                   ),
                   const SizedBox(height: 32),
                   const Text('Support',
