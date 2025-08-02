@@ -151,9 +151,11 @@ class _AuthScreenState extends State<AuthScreen> {
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-    });
+    if (mounted) {
+      setState(() {
+        _isLoading = true;
+      });
+    }
 
     try {
       if (_isSignUp) {
@@ -182,9 +184,11 @@ class _AuthScreenState extends State<AuthScreen> {
         );
       }
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -208,9 +212,11 @@ class _AuthScreenState extends State<AuthScreen> {
   }
 
   Future<void> _signInWithGoogle() async {
-    setState(() {
-      _isLoading = true;
-    });
+    if (mounted) {
+      setState(() {
+        _isLoading = true;
+      });
+    }
 
     try {
       print('🔄 Starting Google Sign-In process...');
@@ -227,9 +233,11 @@ class _AuthScreenState extends State<AuthScreen> {
       // 사용자가 로그인을 취소한 경우
       if (googleUser == null) {
         print('❌ Google Sign-In cancelled by user');
-        setState(() {
-          _isLoading = false;
-        });
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
         return;
       }
 
@@ -276,9 +284,11 @@ class _AuthScreenState extends State<AuthScreen> {
         );
       }
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
