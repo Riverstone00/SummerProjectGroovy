@@ -25,21 +25,21 @@ class _CourseListState extends State<CourseList> {
       "location": "코스터",
       "price": "10만원 이하",
       "time": "4시간",
-      "image": "assets/course2.jpg"
+      "image": "assets/images/course2.png"
     },
     {
       "title": "도심 속 힐링, 한적한 하루",
       "location": "남산 산책로",
       "price": "3만원 이하",
       "time": "3.5시간",
-      "image": "assets/course3.jpg"
+      "image": "assets/images/course3.png"
     },
     {
       "title": "꽁냥 시간, 맛집 데이트",
       "location": "종각 근처",
       "price": "5만원 이하",
       "time": "3시간",
-      "image": "assets/course4.jpg"
+      "image": "assets/images/course4.png"
     },
   ];
 
