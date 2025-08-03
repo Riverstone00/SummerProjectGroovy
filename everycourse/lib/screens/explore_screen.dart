@@ -2,37 +2,103 @@ import 'package:flutter/material.dart';
 import 'seoul_page.dart';
 import 'full_univ.dart';
 import 'full_course.dart';
+import 'package:everycourse/services/course_service.dart';
+import 'course_detail.dart';
 
-class ExploreScreen extends StatelessWidget {
+class ExploreScreen extends StatefulWidget {
   const ExploreScreen({super.key});
+
+  @override
+  State<ExploreScreen> createState() => _ExploreScreenState();
+}
+
+class _ExploreScreenState extends State<ExploreScreen> {
+  final CourseService _courseService = CourseService();
+  bool _isLoading = true;
+  List<Map<String, dynamic>> _popularCourses = [];
+  List<Map<String, dynamic>> _universityRelatedCourses = [];
+  List<Map<String, dynamic>> _themeCourses = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCoursesFromFirebase();
+  }
+
+  Future<void> _loadCoursesFromFirebase() async {
+    try {
+      // Firestore에서 모든 코스 가져오기
+      final allCourses = await _courseService.getAllCourses();
+      
+      // 코스가 비어있으면 로딩 상태 업데이트 후 종료
+      if (allCourses.isEmpty) {
+        setState(() {
+          _isLoading = false;
+        });
+        return;
+      }
+      
+      // 조회수 기준으로 정렬하여 인기 코스 추출
+      final sortedByViews = List<Map<String, dynamic>>.from(allCourses)
+        ..sort((a, b) => (b['viewcount'] ?? 0).compareTo(a['viewcount'] ?? 0));
+      
+      // 해시태그로 대학 관련 코스 필터링
+      final univCourses = allCourses.where((course) {
+        final hashtags = course['hashtags'] as List<dynamic>?;
+        return hashtags != null && 
+               hashtags.any((tag) => tag.toString().contains('대학'));
+      }).toList();
+      
+      // 기타 테마 코스 (인기 코스와 대학 코스를 제외한 나머지)
+      final otherCourses = allCourses.where((course) {
+        final hashtags = course['hashtags'] as List<dynamic>?;
+        return hashtags != null && 
+               !hashtags.any((tag) => tag.toString().contains('대학'));
+      }).toList();
+      
+      setState(() {
+        _popularCourses = sortedByViews.take(3).toList();
+        _universityRelatedCourses = univCourses.take(5).toList();
+        _themeCourses = otherCourses.take(5).toList();
+        _isLoading = false;
+      });
+    } catch (e) {
+      print('코스 데이터 로드 오류: $e');
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: ListView(
-          children: [
-            _buildTopBanner(),
-            const SizedBox(height: 20),
-            _buildSectionWithMore(
-                context, "대학생의 숨은 데이트 코스", const FullUnivPage()),
-            const SizedBox(height: 20),
-            _buildHorizontalImageRow(
-                context, ['서울', '경기', '부산', '인천'], isTheme: false),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
-              child: Divider(color: Colors.grey, thickness: 0.5),
-            ),
-            const SizedBox(height: 20),
-            _buildSectionWithMore(context, "테마별 코스", const FullCoursePage()),
-            const SizedBox(height: 10),
-            _buildHorizontalImageRow(
-                context, ['감성 카페', '연인과 걷기 좋은 장소', '인생 포토존'], isTheme: true),
-            const SizedBox(height: 20),
-            _buildSectionTitle("인기 데이트 코스"),
-            _buildPopularCourse(),
-          ],
-        ),
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : ListView(
+                children: [
+                  _buildTopBanner(),
+                  const SizedBox(height: 20),
+                  _buildSectionWithMore(
+                      context, "대학생의 숨은 데이트 코스", const FullUnivPage()),
+                  const SizedBox(height: 20),
+                  _buildHorizontalImageRow(
+                      context, ['서울', '경기', '부산', '인천'], isTheme: false),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    child: Divider(color: Colors.grey, thickness: 0.5),
+                  ),
+                  const SizedBox(height: 20),
+                  _buildSectionWithMore(context, "테마별 코스", const FullCoursePage()),
+                  const SizedBox(height: 10),
+                  _buildHorizontalImageRow(
+                      context, ['감성 카페', '연인과 걷기 좋은 장소', '인생 포토존'], isTheme: true),
+                  const SizedBox(height: 20),
+                  _buildSectionTitle("인기 데이트 코스"),
+                  _buildPopularCourse(),
+                ],
+              ),
       ),
     );
   }
@@ -196,81 +262,149 @@ class ExploreScreen extends StatelessWidget {
 
   // 인기 데이트 코스
   Widget _buildPopularCourse() {
+    // 인기 코스가 없으면 안내 메시지 표시
+    if (_popularCourses.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.all(16),
+        child: Center(
+          child: Text(
+            '인기 코스가 없습니다',
+            style: TextStyle(color: Colors.grey),
+          ),
+        ),
+      );
+    }
+
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
-          for (int i = 1; i <= 3; i++)
+          for (final course in _popularCourses)
             Padding(
               padding: const EdgeInsets.only(bottom: 16),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.3),
-                      spreadRadius: 1,
-                      blurRadius: 5,
+              child: GestureDetector(
+                onTap: () {
+                  // 코스 상세 화면으로 이동 & 조회수 증가
+                  _courseService.incrementCourseViewCount(course['courseId']);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => CourseDetail(course: course),
                     ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ClipRRect(
-                      borderRadius:
-                          const BorderRadius.vertical(top: Radius.circular(10)),
-                      child: Image.asset(
-                        'assets/images/nothing.png',
-                        height: 150,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
+                  );
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withOpacity(0.3),
+                        spreadRadius: 1,
+                        blurRadius: 5,
                       ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '인기 데이트 코스 $i',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          const Text(
-                            '이 코스는 대학생들에게 인기 있는 데이트 코스입니다.',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Row(
-                            children: const [
-                              Icon(Icons.favorite, color: Colors.red, size: 16),
-                              SizedBox(width: 4),
-                              Text(
-                                '1.2k',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey,
-                                ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ClipRRect(
+                        borderRadius:
+                            const BorderRadius.vertical(top: Radius.circular(10)),
+                        child: course['imageUrl'] != null
+                            ? Image.network(
+                                course['imageUrl'],
+                                height: 150,
+                                width: double.infinity,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Image.asset(
+                                    'assets/images/nothing.png',
+                                    height: 150,
+                                    width: double.infinity,
+                                    fit: BoxFit.cover,
+                                  );
+                                },
+                              )
+                            : Image.asset(
+                                'assets/images/nothing.png',
+                                height: 150,
+                                width: double.infinity,
+                                fit: BoxFit.cover,
                               ),
-                            ],
-                          ),
-                        ],
                       ),
-                    ),
-                  ],
+                      Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              course['title'] ?? '제목 없음',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              course['description'] ?? '이 코스는 대학생들에게 인기 있는 데이트 코스입니다.',
+                              style: const TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                const Icon(Icons.visibility, color: Colors.blue, size: 16),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '${course['viewcount'] ?? 0}',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                if (course['hashtags'] != null && (course['hashtags'] as List).isNotEmpty)
+                                  ..._buildHashtags(course['hashtags']),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
         ],
       ),
     );
+  }
+  
+  // 해시태그 위젯 생성
+  List<Widget> _buildHashtags(List<dynamic> hashtags) {
+    final result = <Widget>[];
+    final maxTags = 2; // 최대 표시할 태그 수
+    
+    for (int i = 0; i < hashtags.length && i < maxTags; i++) {
+      result.add(
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+          margin: const EdgeInsets.only(right: 4),
+          decoration: BoxDecoration(
+            color: Colors.grey.shade200,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Text(
+            '#${hashtags[i]}',
+            style: TextStyle(fontSize: 10, color: Colors.grey.shade700),
+          ),
+        ),
+      );
+    }
+    
+    return result;
   }
 }
