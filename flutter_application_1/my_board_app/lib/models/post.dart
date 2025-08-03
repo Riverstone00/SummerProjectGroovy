@@ -7,12 +7,16 @@ class Post {
   final String title;
   final String? price;
   final String? duration;
+  final String? content;          // 내용 저장용
+  final List<String>? tags;
 
   Post({
     String? id,
-    required this.imagePath,
+    this.imagePath,
     required this.title,
     this.price,
     this.duration,
+    this.content,                 // constructor에 추가
+    this.tags,
   }) : id = id ?? const Uuid().v4();
 }
