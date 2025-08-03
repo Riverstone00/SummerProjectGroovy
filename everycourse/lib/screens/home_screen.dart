@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'explore_screen.dart';
 import 'post_screen.dart';
-import 'mypage_screen.dart';
+import 'my_page.dart'; // 새로 추가된 마이페이지
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -13,10 +13,11 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
 
-  final List<Widget> _screens = const [
-    ExploreScreen(),
-    PostScreen(),
-    MyPageScreen(),
+  // const 키워드 제거
+  final List<Widget> _screens = [
+    const ExploreScreen(),
+    const PostScreen(),
+    MyPage(), // 새로운 마이 페이지로 교체
   ];
 
   void _onItemTapped(int index) {

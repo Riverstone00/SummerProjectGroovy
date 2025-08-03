@@ -608,4 +608,72 @@ class CourseService {
       return false;
     }
   }
+  
+  // 더미 장소 데이터를 Firestore에 추가하는 함수
+  Future<List<String>> addDummyPlacesToFirestore(
+    List<Map<String, dynamic>> places, String userId) async {
+    try {
+      List<String> addedPlaceIds = [];
+      
+      // 각 장소를 개별적으로 추가
+      for (var place in places) {
+        // userId 필드 추가
+        place['userId'] = userId;
+        
+        String docId = await addPlace(place);
+        addedPlaceIds.add(docId);
+      }
+      
+      print('${places.length}개의 더미 장소가 성공적으로 추가되었습니다.');
+      return addedPlaceIds;
+    } catch (e) {
+      print('더미 장소 추가 오류: $e');
+      rethrow;
+    }
+  }
+  
+  // 더미 장소와 코스를 연결하는 함수
+  Future<bool> connectDummyPlacesToCourse(
+    String courseId, List<String> placeIds) async {
+    try {
+      // 각 장소를 순서대로 코스에 추가
+      for (int i = 0; i < placeIds.length; i++) {
+        await addPlaceToCourse(courseId, placeIds[i], i);
+      }
+      
+      print('${placeIds.length}개의 장소가 코스에 성공적으로 연결되었습니다.');
+      return true;
+    } catch (e) {
+      print('장소-코스 연결 오류: $e');
+      return false;
+    }
+  }
+  
+  // 이미지 URL 유효성 검사 및 처리
+  String? validateImageUrl(String? url) {
+    if (url == null || url.isEmpty) {
+      print('이미지 URL이 null 또는 빈 문자열입니다.');
+      return null;
+    }
+    
+    // URL 형식 검사
+    Uri? uri = Uri.tryParse(url);
+    if (uri == null || (!uri.isScheme('http') && !uri.isScheme('https'))) {
+      print('유효하지 않은 이미지 URL 형식: $url');
+      return null;
+    }
+    
+    // 상대 경로인 경우 절대 경로로 변환 시도
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      print('상대 경로 URL: $url - 절대 경로로 변환 시도');
+      if (url.startsWith('/')) {
+        return 'https://firebasestorage.googleapis.com$url';
+      } else {
+        return 'https://firebasestorage.googleapis.com/$url';
+      }
+    }
+    
+    print('유효한 이미지 URL: $url');
+    return url;
+  }
 }
