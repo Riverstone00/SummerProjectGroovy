@@ -39,10 +39,8 @@ class _CourseDetailState extends State<CourseDetail> {
         return;
       }
       
-      // courseId 필드 확인 (course_list.dart와 explore_screen.dart에서는 courseId를 사용함)
-      final String courseId = widget.course['courseId'] ?? widget.course['id'] ?? '';
+      final String courseId = widget.course['id'] ?? '';
       if (courseId.isEmpty) {
-        print('경고: 코스 ID를 찾을 수 없습니다: ${widget.course}');
         setState(() => _isLoading = false);
         return;
       }
@@ -87,10 +85,8 @@ class _CourseDetailState extends State<CourseDetail> {
       return;
     }
     
-    // courseId 필드 확인 (course_list.dart와 explore_screen.dart에서는 courseId를 사용함)
-    final String courseId = widget.course['courseId'] ?? widget.course['id'] ?? '';
+    final String courseId = widget.course['id'] ?? '';
     if (courseId.isEmpty) {
-      print('경고: 북마크 토글 시 코스 ID를 찾을 수 없습니다: ${widget.course}');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('코스 정보를 찾을 수 없습니다.')),
       );
@@ -144,10 +140,8 @@ class _CourseDetailState extends State<CourseDetail> {
       return;
     }
     
-    // courseId 필드 확인 (course_list.dart와 explore_screen.dart에서는 courseId를 사용함)
-    final String courseId = widget.course['courseId'] ?? widget.course['id'] ?? '';
+    final String courseId = widget.course['id'] ?? '';
     if (courseId.isEmpty) {
-      print('경고: 별점 제출 시 코스 ID를 찾을 수 없습니다: ${widget.course}');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('코스 정보를 찾을 수 없습니다.')),
       );
