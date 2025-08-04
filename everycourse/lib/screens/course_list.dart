@@ -182,7 +182,11 @@ class _CourseListState extends State<CourseList> {
                                         errorBuilder: (context, error, stackTrace) {
                                           print('이미지 로드 오류($imageUrl): $error');
                                           // 오류 시 fallback으로 로컬 이미지 사용
-                                          int imageIndex = (index % 4) + 1;
+                                          // courseId 기반으로 일관된 이미지 선택
+                                          String courseId = course['courseId'] ?? course['id'] ?? '';
+                                          int imageIndex = courseId.isEmpty 
+                                              ? (index % 4) + 1 // 이전 로직 유지 (인덱스 기반)
+                                              : (courseId.hashCode % 4) + 1; // 1-4 사이의 값
                                           return Image.asset(
                                             'assets/images/course$imageIndex.png',
                                             width: double.infinity,
@@ -193,7 +197,11 @@ class _CourseListState extends State<CourseList> {
                                       );
                                     } else {
                                       // imageUrl이 없는 경우 로컬 이미지 사용
-                                      int imageIndex = (index % 4) + 1;
+                                      // courseId 기반으로 일관된 이미지 선택
+                                      String courseId = course['courseId'] ?? course['id'] ?? '';
+                                      int imageIndex = courseId.isEmpty 
+                                          ? (index % 4) + 1 // 이전 로직 유지 (인덱스 기반)
+                                          : (courseId.hashCode % 4) + 1; // 1-4 사이의 값
                                       return Image.asset(
                                         'assets/images/course$imageIndex.png',
                                         width: double.infinity,

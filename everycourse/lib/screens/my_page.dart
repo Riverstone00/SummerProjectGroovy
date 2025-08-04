@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:everycourse/services/user_service.dart';
+import 'package:everycourse/screens/bookmarked_courses.dart';
 
 class MyPage extends StatefulWidget {
   const MyPage({super.key});
@@ -181,7 +182,14 @@ class _MyPageState extends State<MyPage> {
           _buildMenuItem('리뷰(평점)'),
           _buildDivider(),
           _buildSectionTitle('북마크'),
-          _buildMenuItem('북마크한 코스'),
+          _buildMenuItem('북마크한 코스', onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const BookmarkedCoursesPage(),
+              ),
+            );
+          }),
           const SizedBox(height: 32),
         ],
       ),
