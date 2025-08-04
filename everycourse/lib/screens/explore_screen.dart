@@ -311,26 +311,40 @@ class _ExploreScreenState extends State<ExploreScreen> {
                       ClipRRect(
                         borderRadius:
                             const BorderRadius.vertical(top: Radius.circular(10)),
-                        child: course['imageUrl'] != null
+                        child: course['imageUrl'] != null && course['imageUrl'].toString().isNotEmpty
                             ? Image.network(
                                 course['imageUrl'],
                                 height: 150,
                                 width: double.infinity,
                                 fit: BoxFit.cover,
                                 errorBuilder: (context, error, stackTrace) {
+                                  // courseId 기반으로 일관된 이미지 선택 (목록 화면과 동일한 방식)
+                                  String courseId = course['courseId'] ?? course['id'] ?? '';
+                                  int imageIndex = courseId.isEmpty 
+                                      ? 1 
+                                      : (courseId.hashCode % 4) + 1; // 1-4 사이의 값
                                   return Image.asset(
-                                    'assets/images/nothing.png',
+                                    'assets/images/course$imageIndex.png',
                                     height: 150,
                                     width: double.infinity,
                                     fit: BoxFit.cover,
                                   );
                                 },
                               )
-                            : Image.asset(
-                                'assets/images/nothing.png',
-                                height: 150,
-                                width: double.infinity,
-                                fit: BoxFit.cover,
+                            : Builder(
+                                builder: (context) {
+                                  // imageUrl이 없는 경우도 courseId 기반으로 이미지 선택
+                                  String courseId = course['courseId'] ?? course['id'] ?? '';
+                                  int imageIndex = courseId.isEmpty 
+                                      ? 1 
+                                      : (courseId.hashCode % 4) + 1; // 1-4 사이의 값
+                                  return Image.asset(
+                                    'assets/images/course$imageIndex.png',
+                                    height: 150,
+                                    width: double.infinity,
+                                    fit: BoxFit.cover,
+                                  );
+                                },
                               ),
                       ),
                       Padding(
