@@ -340,8 +340,13 @@ class _CourseDetailState extends State<CourseDetail> {
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) {
                             print('상세 이미지 로드 오류($imageUrl): $error');
+                            // courseId 기반으로 일관된 이미지 선택 (목록 화면과 동일한 방식)
+                            String courseId = widget.course['courseId'] ?? widget.course['id'] ?? '';
+                            int imageIndex = courseId.isEmpty 
+                                ? 1 
+                                : (courseId.hashCode % 4) + 1; // 1-4 사이의 값
                             return Image.asset(
-                              'assets/images/course1.png',
+                              'assets/images/course$imageIndex.png',
                               width: double.infinity,
                               height: 260,
                               fit: BoxFit.cover,
@@ -349,8 +354,13 @@ class _CourseDetailState extends State<CourseDetail> {
                           },
                         );
                       } else {
+                        // imageUrl이 없는 경우도 courseId 기반으로 이미지 선택
+                        String courseId = widget.course['courseId'] ?? widget.course['id'] ?? '';
+                        int imageIndex = courseId.isEmpty 
+                            ? 1 
+                            : (courseId.hashCode % 4) + 1; // 1-4 사이의 값
                         return Image.asset(
-                          'assets/images/course1.png',
+                          'assets/images/course$imageIndex.png',
                           width: double.infinity,
                           height: 260,
                           fit: BoxFit.cover,
