@@ -1,4 +1,281 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:everycourse/services/course_service.dart';
+
+class CourseDetail extends StatefulWidget {
+  final String courseId; // Firestore 문서 ID
+
+  const CourseDetail({super.key, required this.courseId});
+
+  @override
+  State<CourseDetail> createState() => _CourseDetailState();
+}
+
+class _CourseDetailState extends State<CourseDetail> {
+  bool isBookmarked = false;
+  bool isLiked = false;
+  double userRating = 0.0;
+  double avgRating = 0.0;
+  int totalReviews = 0;
+  Course? course;
+  CourseImage? courseImage;
+  List<Hashtag> hashtags = [];
+  bool isLoading = true;
+  final user = FirebaseAuth.instance.currentUser;
+
+  @override
+  void initState() {
+    super.initState();
+    loadCourseData();
+  }
+
+  Future<void> loadCourseData() async {
+    try {
+      final doc = await FirebaseFirestore.instance.collection('courses').doc(widget.courseId).get();
+      if (doc.exists) {
+        final courseMap = doc.data()!;
+        course = Course.fromMap(courseMap, doc.id);
+
+        final imageDoc = await FirebaseFirestore.instance
+            .collection('course_images')
+            .where('postID', isEqualTo: widget.courseId)
+            .limit(1)
+            .get();
+        if (imageDoc.docs.isNotEmpty) {
+          courseImage = CourseImage.fromMap(imageDoc.docs.first.data());
+        }
+
+        final tagSnapshot = await FirebaseFirestore.instance
+            .collection('hashtags')
+            .where('postID', isEqualTo: widget.courseId)
+            .get();
+        hashtags = tagSnapshot.docs.map((doc) => Hashtag.fromMap(doc.data())).toList();
+
+        final likeDoc = await FirebaseFirestore.instance
+            .collection('likes')
+            .doc('${user!.uid}_${widget.courseId}_like')
+            .get();
+        isLiked = likeDoc.exists;
+
+        final bookmarkDoc = await FirebaseFirestore.instance
+            .collection('bookmarks')
+            .doc('${user!.uid}_${widget.courseId}_bookmark')
+            .get();
+        isBookmarked = bookmarkDoc.exists;
+
+        final reviewSnapshot = await FirebaseFirestore.instance
+            .collection('reviews')
+            .where('postID', isEqualTo: widget.courseId)
+            .get();
+
+        if (reviewSnapshot.docs.isNotEmpty) {
+          final ratings = reviewSnapshot.docs.map((doc) => doc['rating'] as int).toList();
+          totalReviews = ratings.length;
+          avgRating = ratings.reduce((a, b) => a + b) / totalReviews;
+        }
+
+        final userReview = await FirebaseFirestore.instance
+            .collection('reviews')
+            .doc('${user!.uid}_${widget.courseId}_${course!.userID}_review')
+            .get();
+        if (userReview.exists) {
+          userRating = userReview['rating'].toDouble();
+        }
+      }
+    } catch (e) {
+      print("Error loading course: $e");
+    }
+
+    setState(() {
+      isLoading = false;
+    });
+  }
+
+  Future<void> _toggleLike() async {
+    final likeRef = FirebaseFirestore.instance.collection('likes').doc('${user!.uid}_${widget.courseId}_like');
+    if (isLiked) {
+      await likeRef.delete();
+    } else {
+      await likeRef.set({
+        'userID': user!.uid,
+        'postID': widget.courseId,
+        'key': 'like',
+      });
+    }
+    setState(() => isLiked = !isLiked);
+  }
+
+  Future<void> _toggleBookmark() async {
+    final bookmarkRef = FirebaseFirestore.instance.collection('bookmarks').doc('${user!.uid}_${widget.courseId}_bookmark');
+    if (isBookmarked) {
+      await bookmarkRef.delete();
+    } else {
+      await bookmarkRef.set({
+        'userID': user!.uid,
+        'postID': widget.courseId,
+        'key': 'bookmark',
+      });
+    }
+    setState(() => isBookmarked = !isBookmarked);
+  }
+
+  void _showRatingDialog() {
+    double tempRating = userRating > 0 ? userRating : 5.0;
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('별점 주기'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('이 데이트 코스에 몇 점을 주시겠어요?'),
+            const SizedBox(height: 10),
+            RatingBar.builder(
+              initialRating: tempRating,
+              minRating: 1,
+              allowHalfRating: true,
+              itemCount: 5,
+              itemBuilder: (context, _) => const Icon(Icons.star, color: Colors.amber),
+              onRatingUpdate: (rating) {
+                tempRating = rating;
+              },
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text("취소")),
+          TextButton(
+            onPressed: () async {
+              final reviewRef = FirebaseFirestore.instance.collection('reviews').doc('${user!.uid}_${widget.courseId}_${course!.userID}_review');
+              await reviewRef.set({
+                'userID': user!.uid,
+                'postID': widget.courseId,
+                'userID2': course!.userID,
+                'key': 'review',
+                'rating': tempRating.round(),
+              });
+              Navigator.pop(context);
+              loadCourseData();
+            },
+            child: const Text("확인"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (isLoading || course == null) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+        elevation: 1,
+        actions: [
+          IconButton(
+            icon: Icon(isBookmarked ? Icons.bookmark : Icons.bookmark_border, color: isBookmarked ? Colors.amber : Colors.grey),
+            onPressed: _toggleBookmark,
+          ),
+          IconButton(
+            icon: Icon(isLiked ? Icons.favorite : Icons.favorite_border, color: isLiked ? Color(0xFFFF597B) : Colors.grey),
+            onPressed: _toggleLike,
+          ),
+        ],
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.only(bottom: 100),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Image.network(
+              courseImage?.imageURL ?? 'https://via.placeholder.com/300x200',
+              width: double.infinity,
+              height: 300,
+              fit: BoxFit.cover,
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+              child: Text(course!.title, style: const TextStyle(fontSize: 25, fontWeight: FontWeight.bold)),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: [
+                  const Icon(Icons.star, color: Colors.red, size: 25),
+                  const SizedBox(width: 4),
+                  Text('$totalReviews (${avgRating.toStringAsFixed(1)}/5)', style: TextStyle(color: Colors.grey[700], fontSize: 15)),
+                  const SizedBox(width: 10),
+                  GestureDetector(
+                    onTap: _showRatingDialog,
+                    child: const Text('별점주기', style: TextStyle(fontSize: 14, color: Colors.blue, decoration: TextDecoration.underline)),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              child: Row(
+                children: [
+                  const Text("💰", style: TextStyle(fontSize: 15)),
+                  Text(" ${course!.cost}원 ", style: const TextStyle(color: Colors.grey, fontSize: 15)),
+                  const Text("⏱️", style: TextStyle(fontSize: 15)),
+                  Text(" ${course!.timeEstimated.inMinutes}분", style: const TextStyle(color: Colors.grey, fontSize: 15)),
+                ],
+              ),
+            ),
+            if (hashtags.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                child: Wrap(
+                  spacing: 8,
+                  children: hashtags.map((tag) => Text('#${tag.normalizedTagName}', style: const TextStyle(color: Colors.grey))).toList(),
+                ),
+              ),
+            const SizedBox(height: 20),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
+                children: course!.placeOrder.map((place) => Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: _buildPlaceButton(place.name),
+                )).toList(),
+              ),
+            ),
+            const SizedBox(height: 30),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPlaceButton(String name) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton.icon(
+        icon: const Icon(Icons.place_outlined),
+        label: Text(name, style: const TextStyle(fontSize: 15)),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFFFF8E9E),
+          foregroundColor: Colors.black,
+          elevation: 0,
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+        onPressed: () {},
+      ),
+    );
+  }
+}
+
+
+
+/*import 'package:flutter/material.dart';
 import 'package:everycourse/services/course_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -518,4 +795,4 @@ class _CourseDetailState extends State<CourseDetail> {
       ),
     );
   }
-}
+}*/
