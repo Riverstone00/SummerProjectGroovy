@@ -1,16 +1,55 @@
-# my_board_app
+# Firestore 기반 프로젝트 To-Do 리스트
 
-A new Flutter project.
+## 1. 데이터베이스(백엔드) 설계 및 초기 설정
+- [ ] 전체 Firestore 콜렉션/도큐먼트 구조 설계 문서화
+- [ ] 주요 데이터 모델 정의(users, courses, places, reviews 등)
+- [ ] Firestore 샘플 데이터 입력
+- [ ] Firestore Security Rules(읽기/쓰기 권한) 설정
+- [ ] Storage(이미지 저장) 규칙 설정
+- [ ] Firebase Authentication(이메일/비밀번호, 학생 이메일 인증 등) 세팅
 
-## Getting Started
+## 2. Cloud Functions(서버리스 백엔드, 필요 시)
+- [ ] 학생 이메일 인증(코드 발송 및 검증) 함수 작성
+- [ ] 리뷰/평점 자동 집계 함수(코스 평점 계산 등)
+- [ ] 기타 자동처리/트리거 로직(필요 시)
 
-This project is a starting point for a Flutter application.
+## 3. Flutter 프론트엔드 개발
+### A. 인증/회원 관리
+- [ ] 로그인/회원가입 화면
+- [ ] 학교 이메일 입력 및 인증 코드 발송/입력 화면
+- [ ] 인증상태 반영(학생 인증 완료/미완료 UI)
 
-A few resources to get you started if this is your first Flutter project:
+### B. 코스(Course) 관리
+- [ ] 코스 목록/검색/필터 화면
+- [ ] 코스 상세 화면(장소, 이미지, 리뷰, 해시태그 등 포함)
+- [ ] 코스 등록/수정/삭제 화면
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+### C. 장소(Place) 관리
+- [ ] 코스별 장소 추가/수정/삭제 UI
+- [ ] 장소별 정보 및 지도 연동(선택사항)
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+### D. 이미지 업로드/관리
+- [ ] 이미지 업로드/조회 UI
+- [ ] Storage 연동 및 Firestore에 이미지 정보 저장
+
+### E. 해시태그/검색
+- [ ] 해시태그 추가/검색 UI
+- [ ] 해시태그 기반 코스 검색/필터
+
+### F. 좋아요/북마크/리뷰
+- [ ] 코스 좋아요 및 북마크 기능
+- [ ] 내가 좋아요/북마크한 코스 목록 화면
+- [ ] 리뷰(평점) 작성/조회/삭제 UI
+
+### G. 접근 권한/오류 처리
+- [ ] 인증된 사용자/학생만 접근 가능한 기능 구현
+- [ ] Firestore 및 Auth 오류 처리/예외처리
+
+## 4. 협업 및 기타
+- [ ] DB 구조 및 API(콜렉션/도큐먼트) 설계 문서 작성 및 공유
+- [ ] GitHub로 코드/문서 공유, 브랜치 전략 정의
+- [ ] 정기 회의/피드백, 코드 리뷰 진행
+- [ ] 배포/운영 테스트 및 Firebase Console 관리
+
+---
+**각 To-Do 항목은 구체적으로 나눠 각자 맡을 역할을 분배하고, 진행상황을 GitHub Issue나 Notion 등에서 관리하면 좋아요!**
