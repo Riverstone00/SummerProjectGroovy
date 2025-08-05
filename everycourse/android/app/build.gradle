@@ -1,0 +1,81 @@
+plugins {
+    id 'com.android.application'
+    id 'kotlin-android'
+    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
+    id 'dev.flutter.flutter-gradle-plugin'
+    // Google Services 플러그인 추가
+    id 'com.google.gms.google-services'
+}
+
+android {
+    namespace 'com.example.everycourse'
+    compileSdk flutter.compileSdkVersion
+    ndkVersion "27.0.12077973"
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+
+    kotlinOptions {
+        jvmTarget = '11'
+    }
+
+    defaultConfig {
+        // EveryCourse 앱 설정
+        applicationId 'com.example.everycourse'
+        // 앱 버전 설정 (Firebase 호환성을 위해 minSdk 23으로 설정)
+        minSdk 23
+        targetSdk flutter.targetSdkVersion
+        versionCode flutter.versionCode
+        versionName flutter.versionName
+        
+        // 앱 이름과 아이콘 설정
+        resValue "string", "app_name", "EveryCourse"
+    }
+
+    // Groovy를 활용한 빌드 타입 설정
+    buildTypes {
+        debug {
+            debuggable true
+            versionNameSuffix '-debug'
+        }
+        release {
+            // 릴리스 빌드 최적화
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.debug
+        }
+    }
+    
+    // 소스 세트 설정 (Groovy 스타일)
+    sourceSets {
+        main.java.srcDirs += 'src/main/kotlin'
+    }
+}
+
+// Firebase 의존성 추가
+dependencies {
+    // Firebase BoM - 버전 관리
+    implementation platform('com.google.firebase:firebase-bom:34.0.0')
+    
+    // Firebase Analytics (기본)
+    implementation 'com.google.firebase:firebase-analytics'
+    
+    // Firebase Authentication
+    implementation 'com.google.firebase:firebase-auth'
+    
+    // FirebaseUI for Authentication (소셜 로그인 UI) - BoM 적용 안됨, 버전 필수
+    implementation 'com.firebaseui:firebase-ui-auth:9.0.0'
+    
+    // Firebase Firestore (현재 main.dart에서 사용 중)
+    implementation 'com.google.firebase:firebase-firestore'
+    
+    // 필요한 다른 Firebase 서비스들 (선택사항)
+    // implementation 'com.google.firebase:firebase-storage'
+}
+
+flutter {
+    source '../..'
+}
