@@ -24,7 +24,7 @@ class _WriteScreenState extends State<WriteScreen> {
     '3만원 이하',
     '5만원 이하',
     '10만원 이하',
-    '10만원 이상',
+    '10만원 초과',
   ];
   String? _selectedPrice;
 
