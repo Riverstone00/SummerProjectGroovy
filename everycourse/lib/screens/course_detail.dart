@@ -5,9 +5,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 class CourseDetail extends StatefulWidget {
   final Map<String, dynamic> course;
-  
+
   const CourseDetail({super.key, required this.course});
-  
+
   @override
   State<CourseDetail> createState() => _CourseDetailState();
 }
@@ -16,67 +16,83 @@ class _CourseDetailState extends State<CourseDetail> {
   final CourseService _courseService = CourseService();
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  
-  bool _isBookmarked = false;
-  double _userRating = 0; // 사용자가 현재 주고 있는 별점
-  bool _hasRated = false; // 사용자가 이미 별점을 줬는지 여부
-  bool _isLoading = true;
-  
+
+  bool _isBookmarked = false; // 북마크 상태
+  bool _isLiked = false;      // 좋아요 상태
+  int _likeCount = 0;         // 좋아요 수
+  bool _isLoading = true;     // 로딩 상태
+
   @override
   void initState() {
     super.initState();
-    _checkUserInteractions();
+    _initializeState();
   }
-  
-  // 사용자의 별점 및 북마크 상태 확인
-  Future<void> _checkUserInteractions() async {
+
+  // 초기 상태 설정: 북마크/좋아요 여부 확인 및 좋아요 수 로드
+  Future<void> _initializeState() async {
     setState(() => _isLoading = true);
-    
+
     try {
       final user = _auth.currentUser;
       if (user == null) {
         setState(() => _isLoading = false);
         return;
       }
-      
-      // courseId 필드 확인 (course_list.dart와 explore_screen.dart에서는 courseId를 사용함)
+
       final String courseId = widget.course['courseId'] ?? widget.course['id'] ?? '';
       if (courseId.isEmpty) {
-        print('경고: 코스 ID를 찾을 수 없습니다: ${widget.course}');
         setState(() => _isLoading = false);
         return;
       }
-      
-      // 북마크 상태 확인
-      final bookmarkDoc = await _firestore
-          .collection('users')
-          .doc(user.uid)
-          .collection('bookmarks')
-          .doc(courseId)
-          .get();
-      
-      // 별점 상태 확인
-      final ratingDoc = await _firestore
-          .collection('users')
-          .doc(user.uid)
-          .collection('ratings')
-          .doc(courseId)
-          .get();
-      
+
+      // 북마크와 좋아요 문서 조회
+      final bookmarkDoc = await _firestore.collection('users').doc(user.uid).collection('bookmarks').doc(courseId).get();
+      final likeDoc = await _firestore.collection('users').doc(user.uid).collection('likes').doc(courseId).get();
+      final courseDoc = await _firestore.collection('courses').doc(courseId).get();
+      final likesFromDb = courseDoc.data()?['likes'] ?? 0;
+
       setState(() {
         _isBookmarked = bookmarkDoc.exists;
-        if (ratingDoc.exists && ratingDoc.data() != null) {
-          _userRating = (ratingDoc.data()!['rating'] as num).toDouble();
-          _hasRated = true;
-        }
+        _isLiked = likeDoc.exists;
+        _likeCount = likesFromDb;
         _isLoading = false;
       });
     } catch (e) {
-      print('사용자 상호작용 확인 오류: $e');
+      print('초기화 오류: $e');
       setState(() => _isLoading = false);
     }
   }
-  
+
+  // 좋아요 토글 기능
+  Future<void> _toggleLike() async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+
+    final String courseId = widget.course['courseId'] ?? widget.course['id'] ?? '';
+    final likeRef = _firestore.collection('users').doc(user.uid).collection('likes').doc(courseId);
+    final courseRef = _firestore.collection('courses').doc(courseId);
+
+    try {
+      if (_isLiked) {
+        await likeRef.delete();
+        await courseRef.update({'likes': FieldValue.increment(-1)});
+        setState(() {
+          _isLiked = false;
+          _likeCount = (_likeCount - 1).clamp(0, double.infinity).toInt();
+        });
+      } else {
+        await likeRef.set({'timestamp': FieldValue.serverTimestamp()});
+        await courseRef.update({'likes': FieldValue.increment(1)});
+        setState(() {
+          _isLiked = true;
+          _likeCount++;
+        });
+      }
+    } catch (e) {
+      print('좋아요 토글 오류: $e');
+    }
+  }
+
   // 북마크 토글 기능
   Future<void> _toggleBookmark() async {
     final user = _auth.currentUser;
@@ -86,8 +102,7 @@ class _CourseDetailState extends State<CourseDetail> {
       );
       return;
     }
-    
-    // courseId 필드 확인 (course_list.dart와 explore_screen.dart에서는 courseId를 사용함)
+
     final String courseId = widget.course['courseId'] ?? widget.course['id'] ?? '';
     if (courseId.isEmpty) {
       print('경고: 북마크 토글 시 코스 ID를 찾을 수 없습니다: ${widget.course}');
@@ -96,30 +111,25 @@ class _CourseDetailState extends State<CourseDetail> {
       );
       return;
     }
-    
+
     try {
-      final bookmarkRef = _firestore
-          .collection('users')
-          .doc(user.uid)
-          .collection('bookmarks')
-          .doc(courseId);
-      
+      final bookmarkRef = _firestore.collection('users').doc(user.uid).collection('bookmarks').doc(courseId);
+
       if (_isBookmarked) {
-        // 북마크 제거
         await bookmarkRef.delete();
       } else {
-        // 북마크 추가
         await bookmarkRef.set({
           'courseId': courseId,
           'timestamp': FieldValue.serverTimestamp(),
           'courseData': widget.course,
         });
       }
-      
+
       setState(() {
         _isBookmarked = !_isBookmarked;
       });
-      
+
+      // 상태에 따라 알림
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(_isBookmarked ? '북마크에 추가되었습니다.' : '북마크에서 제거되었습니다.'),
@@ -133,195 +143,78 @@ class _CourseDetailState extends State<CourseDetail> {
       );
     }
   }
-  
-  // 별점 제출 기능
-  Future<void> _submitRating(double rating) async {
-    final user = _auth.currentUser;
-    if (user == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('로그인이 필요한 기능입니다.')),
-      );
-      return;
-    }
-    
-    // courseId 필드 확인 (course_list.dart와 explore_screen.dart에서는 courseId를 사용함)
-    final String courseId = widget.course['courseId'] ?? widget.course['id'] ?? '';
-    if (courseId.isEmpty) {
-      print('경고: 별점 제출 시 코스 ID를 찾을 수 없습니다: ${widget.course}');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('코스 정보를 찾을 수 없습니다.')),
-      );
-      return;
-    }
-    
-    try {
-      // 사용자 별점 저장
-      final userRatingRef = _firestore
-          .collection('users')
-          .doc(user.uid)
-          .collection('ratings')
-          .doc(courseId);
-      
-      await userRatingRef.set({
-        'courseId': courseId,
-        'rating': rating,
-        'timestamp': FieldValue.serverTimestamp(),
-      });
-      
-      // 코스 평점 업데이트를 위한 트랜잭션
-      await _firestore.runTransaction((transaction) async {
-        // 코스 문서 가져오기
-        final courseDoc = await transaction.get(_firestore.collection('courses').doc(courseId));
-        
-        if (!courseDoc.exists) {
-          return;
-        }
-        
-        // 현재 평점 정보
-        final currentRating = courseDoc.data()?['rating'] as num? ?? 0;
-        final currentReviewCount = courseDoc.data()?['reviewCount'] as num? ?? 0;
-        
-        double newRating;
-        int newReviewCount;
-        
-        if (_hasRated) {
-          // 기존 별점 업데이트 (평균 재계산)
-          final totalRating = currentRating * currentReviewCount;
-          final updatedTotalRating = totalRating - _userRating + rating;
-          newRating = currentReviewCount > 0 ? updatedTotalRating / currentReviewCount : 0;
-          newReviewCount = currentReviewCount.toInt();
-        } else {
-          // 새로운 별점 추가
-          final totalRating = currentRating * currentReviewCount;
-          newReviewCount = currentReviewCount.toInt() + 1;
-          newRating = newReviewCount > 0 ? (totalRating + rating) / newReviewCount : 0;
-        }
-        
-        // 코스 문서 업데이트
-        transaction.update(_firestore.collection('courses').doc(courseId), {
-          'rating': newRating,
-          'reviewCount': newReviewCount,
-        });
-      });
-      
-      setState(() {
-        _userRating = rating;
-        _hasRated = true;
-      });
-      
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('별점이 등록되었습니다.'),
-          duration: Duration(seconds: 1),
-        ),
-      );
-    } catch (e) {
-      print('별점 등록 오류: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('별점 등록 중 오류가 발생했습니다.')),
-      );
-    }
-  }
-  
-  // 별점 선택 다이얼로그
-  Future<void> _showRatingDialog() async {
-    double tempRating = _userRating;
-    
-    return showDialog<void>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('별점 주기'),
-          content: StatefulBuilder(
-            builder: (BuildContext context, StateSetter setState) {
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text('이 코스에 별점을 매겨주세요'),
-                  const SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(5, (index) {
-                      return IconButton(
-                        icon: Icon(
-                          index < tempRating / 2 ? Icons.star : Icons.star_border,
-                          color: Colors.amber,
-                          size: 30,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            tempRating = (index + 1) * 2.0; // 1-5 별점을 2-10으로 변환
-                          });
-                        },
-                      );
-                    }),
-                  ),
-                  const SizedBox(height: 10),
-                  Text('${tempRating.toStringAsFixed(1)}/10', 
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                ],
-              );
-            },
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('취소'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: const Text('확인'),
-              onPressed: () {
-                Navigator.of(context).pop();
-                _submitRating(tempRating);
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
-    // 가격과 시간 정보 포맷
     final formatInfo = _courseService.formatPriceAndTime(widget.course);
     final formattedPrice = formatInfo['formattedPrice'] ?? '가격 정보 없음';
     final formattedTime = formatInfo['formattedTime'] ?? '시간 정보 없음';
-    
-    // 해시태그 처리
+
     final List<String> hashtags = [];
-    if (widget.course['hashtags'] != null) {
-      if (widget.course['hashtags'] is List) {
-        hashtags.addAll((widget.course['hashtags'] as List).map((tag) => '#$tag').toList());
-      }
+    if (widget.course['hashtags'] is List) {
+      hashtags.addAll((widget.course['hashtags'] as List).map((tag) => '#$tag'));
     }
 
     return Scaffold(
       backgroundColor: const Color(0xFFFAF5F5),
       appBar: AppBar(
-        title: const Text(''), // 제목 제거
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 1,
+        iconTheme: const IconThemeData(size: 30), // 아이콘 크기 증가
         actions: [
-          // 북마크 버튼
           IconButton(
-            icon: Icon(
-              _isBookmarked ? Icons.bookmark : Icons.bookmark_outline,
-              color: _isBookmarked ? Colors.red : Colors.black,
-            ),
+            icon: Icon(_isBookmarked ? Icons.bookmark : Icons.bookmark_border, color: _isBookmarked ? Colors.amber : Colors.grey),
             onPressed: _isLoading ? null : _toggleBookmark,
           ),
-          // 별점 버튼
           IconButton(
-            icon: const Icon(Icons.star_rate),
-            color: _hasRated ? Colors.amber : Colors.black,
-            onPressed: _isLoading ? null : _showRatingDialog,
+            icon: Icon(_isLiked ? Icons.favorite : Icons.favorite_border, color: _isLiked ? const Color(0xFFFF597B) : Colors.grey),
+            onPressed: _isLoading ? null : _toggleLike,
           ),
         ],
       ),
+
+      // 하단 버튼 영역
+      bottomNavigationBar: Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          border: Border(top: BorderSide(color: Color(0xFFCCCCCC), width: 1)),
+        ),
+        padding: const EdgeInsets.fromLTRB(16, 18, 16, 28),
+        child: Row(
+          children: [
+            // 찜 버튼
+            GestureDetector(
+              onTap: _isLoading ? null : _toggleLike,
+              child: Padding(
+                padding: const EdgeInsets.only(right: 20, left: 4),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(_isLiked ? Icons.favorite : Icons.favorite_border, color: _isLiked ? const Color(0xFFFF597B) : Colors.grey, size: 30),
+                    const SizedBox(height: 4),
+                    Text('찜 $_likeCount', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                  ],
+                ),
+              ),
+            ),
+            // 저장 버튼
+            Expanded(
+              child: ElevatedButton(
+                onPressed: _toggleBookmark,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFFF597B),
+                  padding: const EdgeInsets.symmetric(vertical: 17),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+                child: const Text('저장하기', style: TextStyle(fontSize: 18, color: Colors.white)),
+              ),
+            ),
+          ],
+        ),
+      ),
+
+      // 본문
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
@@ -329,94 +222,56 @@ class _CourseDetailState extends State<CourseDetail> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // 대표 이미지
-                  Builder(
-                    builder: (context) {
-                      String? imageUrl = widget.course['imageUrl'];
-                      if (imageUrl != null && imageUrl.isNotEmpty) {
-                        return Image.network(
-                          imageUrl,
-                          width: double.infinity,
-                          height: 260,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            print('상세 이미지 로드 오류($imageUrl): $error');
-                            // courseId 기반으로 일관된 이미지 선택 (목록 화면과 동일한 방식)
-                            String courseId = widget.course['courseId'] ?? widget.course['id'] ?? '';
-                            int imageIndex = courseId.isEmpty 
-                                ? 1 
-                                : (courseId.hashCode % 4) + 1; // 1-4 사이의 값
-                            return Image.asset(
-                              'assets/images/course$imageIndex.png',
-                              width: double.infinity,
-                              height: 260,
-                              fit: BoxFit.cover,
-                            );
-                          },
-                        );
-                      } else {
-                        // imageUrl이 없는 경우도 courseId 기반으로 이미지 선택
-                        String courseId = widget.course['courseId'] ?? widget.course['id'] ?? '';
-                        int imageIndex = courseId.isEmpty 
-                            ? 1 
-                            : (courseId.hashCode % 4) + 1; // 1-4 사이의 값
-                        return Image.asset(
-                          'assets/images/course$imageIndex.png',
-                          width: double.infinity,
-                          height: 260,
-                          fit: BoxFit.cover,
-                        );
-                      }
-                    },
+                  Image.network(
+                    widget.course['image'] ?? 'https://via.placeholder.com/300',
+                    width: double.infinity,
+                    height: 260,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) =>
+                        Image.asset('assets/images/course1.png', width: double.infinity, height: 260, fit: BoxFit.cover),
                   ),
 
-                  // 제목
+                  // 제목 + 별점 + 리뷰
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
-                    child: Text(
-                      widget.course['title'] ?? '제목 없음',
-                      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-
-                  // 별점
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Row(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildRatingStars(widget.course['rating']),
-                        const SizedBox(width: 6),
-                        Text(
-                          widget.course['reviewCount'] != null 
-                              ? '${widget.course['reviewCount']} (${(widget.course['rating'] as num?)?.toStringAsFixed(1) ?? '0.0'}/10)' 
-                              : '0 (0.0/10)',
-                          style: TextStyle(color: Colors.grey[700], fontSize: 14)
+                        Text(widget.course['title'] ?? '제목 없음', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            ...List.generate(5, (i) {
+                              final r = (widget.course['rating'] ?? 0) / 2.0;
+                              return Icon(
+                                i < r ? Icons.star : (i < r + 0.5 ? Icons.star_half : Icons.star_border),
+                                color: Colors.amber,
+                                size: 20,
+                              );
+                            }),
+                            const SizedBox(width: 6),
+                            Text('${widget.course['reviewCount'] ?? 0} (${(widget.course['rating'] ?? 0).toStringAsFixed(1)}/10)',
+                                style: TextStyle(color: Colors.grey[700], fontSize: 13)),
+                            const SizedBox(width: 10),
+                            GestureDetector(
+                              onTap: () {},
+                              child: const Text('별점주기', style: TextStyle(fontSize: 13, color: Colors.blue, decoration: TextDecoration.underline)),
+                            ),
+                          ],
                         ),
                       ],
                     ),
                   ),
 
-                  // 내 별점 표시 (별점을 준 경우에만)
-                  if (_hasRated)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                      child: Row(
-                        children: [
-                          const Text("내가 준 별점: ", style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-                          Text("${_userRating.toStringAsFixed(1)}/10", 
-                              style: const TextStyle(color: Colors.amber, fontSize: 14, fontWeight: FontWeight.bold)),
-                        ],
-                      ),
-                    ),
-
-                  // 가격 및 시간
+                  // 가격 & 시간 정보
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
                     child: Row(
                       children: [
-                        const Text("💰", style: TextStyle(fontSize: 14)),
-                        Text(" $formattedPrice  ", style: const TextStyle(color: Colors.grey, fontSize: 14)),
-                        const Text("⏱️", style: TextStyle(fontSize: 14)),
-                        Text(" $formattedTime", style: const TextStyle(color: Colors.grey, fontSize: 14)),
+                        const Text("\u{1F4B0}"),
+                        Text(" $formattedPrice  ", style: const TextStyle(color: Colors.grey)),
+                        const Text("\u{23F1}"),
+                        Text(" $formattedTime", style: const TextStyle(color: Colors.grey)),
                       ],
                     ),
                   ),
@@ -424,10 +279,7 @@ class _CourseDetailState extends State<CourseDetail> {
                   // 설명
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
-                    child: Text(
-                      widget.course['description'] ?? '설명이 없습니다.',
-                      style: const TextStyle(fontSize: 15),
-                    ),
+                    child: Text(widget.course['description'] ?? '설명이 없습니다.', style: const TextStyle(fontSize: 15)),
                   ),
 
                   // 해시태그
@@ -436,25 +288,23 @@ class _CourseDetailState extends State<CourseDetail> {
                       padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
                       child: Wrap(
                         spacing: 8,
-                        children: hashtags
-                            .map((tag) => Text(tag, style: const TextStyle(color: Colors.grey, fontSize: 13)))
-                            .toList(),
+                        children: hashtags.map((tag) => Text(tag, style: const TextStyle(color: Colors.grey, fontSize: 13))).toList(),
                       ),
                     ),
 
                   const SizedBox(height: 20),
 
-                  // 장소 버튼
+                  // 장소 리스트
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Column(
                       children: [
-                        if (widget.course['location'] != null)
-                          _buildPlaceButton(widget.course['location']),
-                        if (widget.course['place'] != null && widget.course['place'] != widget.course['location'])
-                          Padding(
-                            padding: const EdgeInsets.only(top: 8),
-                            child: _buildPlaceButton(widget.course['place']),
+                        if (widget.course['places'] is List)
+                          ...List<Widget>.from(
+                            (widget.course['places'] as List).map((place) => Padding(
+                                  padding: const EdgeInsets.only(bottom: 8),
+                                  child: _buildPlaceButton(place.toString()),
+                                )),
                           ),
                       ],
                     ),
@@ -465,39 +315,6 @@ class _CourseDetailState extends State<CourseDetail> {
               ),
             ),
     );
-  }
-  
-  // 별점 표시 위젯
-  Widget _buildRatingStars(dynamic rating) {
-    double ratingValue = 0;
-    if (rating != null) {
-      if (rating is num) {
-        ratingValue = rating.toDouble();
-      }
-    }
-    
-    // 10점 만점을 5점 척도로 변환
-    ratingValue = ratingValue / 2;
-    
-    List<Widget> stars = [];
-    
-    // 전체 별 아이콘 생성
-    for (int i = 1; i <= 5; i++) {
-      IconData iconData;
-      Color color = Colors.amber;
-      
-      if (i <= ratingValue) {
-        iconData = Icons.star; // 꽉 찬 별
-      } else if (i > ratingValue && i <= ratingValue + 0.5) {
-        iconData = Icons.star_half; // 반 별
-      } else {
-        iconData = Icons.star_border; // 빈 별
-      }
-      
-      stars.add(Icon(iconData, color: color, size: 20));
-    }
-    
-    return Row(children: stars);
   }
 
   // 장소 버튼 위젯
