@@ -1,0 +1,82 @@
+*   [33maa4395d[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mpostboard[m[33m)[m Resolve merge conflict in README.md
+[31m|[m[32m\[m  
+[31m|[m * [33mf59b389[m[33m ([m[1;31morigin/postboard[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m course_detail.dart
+[31m|[m * [33m248f012[m course_detail.dart
+[31m|[m * [33ma17ad5c[m Update and rename bookmark.dart to mybookmark.dart
+[31m|[m * [33mcf26da9[m mypage
+[31m|[m * [33mcb41d30[m resister page
+[31m|[m * [33m948ed48[m Update mypageXX.dart
+[31m|[m *   [33ma7cff79[m Merge pull request #11 from Riverstone00/허강석_0803
+[31m|[m [33m|[m[34m\[m  
+[31m|[m [33m|[m * [33mb1dfefc[m[33m ([m[1;31morigin/허강석_0803[m[33m)[m 별점+ 북마크
+[31m|[m [33m|[m * [33m6512151[m 별점 기능 추가, 별점 실시간 동기화
+[31m|[m * [34m|[m [33m7639c41[m Merge pull request #10 from Riverstone00/허강석_0803
+[31m|[m [35m|[m[34m\[m[34m|[m 
+[31m|[m [35m|[m * [33m2320ce7[m firestorage 등록+스토리지 기반 이미지 로드+ 마이페이지 병합
+[31m|[m [35m|[m[35m/[m  
+[31m|[m *   [33m508abea[m Merge pull request #9 from Riverstone00/허강석
+[31m|[m [1;31m|[m[1;32m\[m  
+[31m|[m [1;31m|[m * [33m52b757d[m 내부 로직 변경& 더미 데이터 추가
+[31m|[m [1;31m|[m *   [33m2e04b71[m Merge branch 'main' into 허강석
+[31m|[m [1;31m|[m [1;33m|[m[1;34m\[m  
+[31m|[m [1;31m|[m * [1;34m|[m [33m272fa96[m 탐색 탭 추가 완료
+[31m|[m * [1;34m|[m [1;34m|[m [33m4e654bb[m Add files via upload
+[31m|[m * [1;34m|[m [1;34m|[m [33m8d96e50[m Add files via upload
+[31m|[m [1;34m|[m [1;34m|[m[1;34m/[m  
+[31m|[m [1;34m|[m[1;34m/[m[1;34m|[m   
+[31m|[m * [1;34m|[m [33m5241ba6[m Update pubspec.yaml
+[31m|[m [1;34m|[m[1;34m/[m  
+[31m|[m *   [33mf7bfe31[m Merge pull request #8 from Riverstone00/허강석
+[31m|[m [1;35m|[m[1;36m\[m  
+[31m|[m [1;35m|[m * [33m6c94cf0[m 로그아웃+ 이름 연동
+[31m|[m * [1;36m|[m [33m347095d[m Update pubspec.yaml
+[31m|[m * [1;36m|[m [33m3654ea3[m Update CourseList.dart
+[31m|[m * [1;36m|[m [33m33dda60[m Update SeoulPage.dart
+[31m|[m * [1;36m|[m [33m140d98e[m Update home.dart
+[31m|[m * [1;36m|[m   [33m8c4e585[m Merge pull request #7 from Riverstone00/newone
+[31m|[m [31m|[m[32m\[m [1;36m\[m  
+[31m|[m [31m|[m * [1;36m|[m [33md3b3ff0[m[33m ([m[1;31morigin/newone[m[33m, [m[1;31morigin/lobby-course[m[33m)[m lobby-image
+[31m|[m * [32m|[m [1;36m|[m [33m928d010[m Merge pull request #6 from Riverstone00/lobby-course
+[31m|[m [33m|[m[32m\[m[32m|[m [1;36m|[m 
+[31m|[m [33m|[m * [1;36m|[m [33mc8b33ea[m main page
+[31m|[m [33m|[m[33m/[m [1;36m/[m  
+[31m|[m * [1;36m|[m [33m1534d2c[m Merge pull request #5 from Riverstone00/허강석
+[31m|[m [35m|[m[1;36m\[m[1;36m|[m 
+[31m|[m [35m|[m * [33m7825171[m UI 뼈대 생성
+[31m|[m [35m|[m * [33me63c94a[m UI뼈대 작업중
+[31m|[m * [36m|[m [33m39de1b3[m Merge pull request #4 from Riverstone00/허강석
+[31m|[m [1;31m|[m[36m\[m[36m|[m 
+[31m|[m [1;31m|[m * [33m82d3d86[m function 추가
+[31m|[m [1;31m|[m * [33m996d9bf[m 2트
+[31m|[m [1;31m|[m * [33m78d1202[m functions 설정 &  firestore 연동
+[31m|[m [1;31m|[m * [33m01fddb6[m 구글 로그인 완
+[31m|[m [1;31m|[m * [33meb3b7b0[m google 연동
+[31m|[m [1;31m|[m[1;31m/[m  
+[31m|[m * [33mf07b60a[m Delete everycourse/assets/images/ex2
+[31m|[m * [33mab8bf14[m Add files via upload
+[31m|[m * [33m21dd489[m Create ex2
+[31m|[m * [33m48d2215[m Create ex1
+[31m|[m *   [33m5e03f47[m Merge pull request #3 from Riverstone00/assets
+[31m|[m [1;33m|[m[1;34m\[m  
+[31m|[m [1;33m|[m * [33md7a6997[m Create images
+[31m|[m [1;33m|[m[1;33m/[m  
+[31m|[m * [33m41d733a[m Delete everycourse/assets directory
+[31m|[m * [33m6ff9d0c[m Add files via upload
+[31m|[m * [33m2384d88[m Create start
+[31m|[m * [33mebe3fa3[m Delete everycourse/assets/images
+[31m|[m * [33mda5c717[m Create images
+[31m|[m * [33m96456bf[m Delete everycourse/assets
+[31m|[m * [33ma5311be[m Create assets
+[31m|[m * [33m10cb801[m Create assets
+[31m|[m * [33mc3689dd[m ERD 업로드
+[31m|[m * [33m418d583[m Create README.md
+[31m|[m *   [33m5cd99d6[m Merge pull request #2 from Riverstone00/firestore-연결
+[31m|[m [1;35m|[m[1;36m\[m  
+[31m|[m [1;35m|[m * [33ma9369bf[m firebase 연동
+[31m|[m [1;35m|[m[1;35m/[m  
+[31m|[m *   [33md185582[m Merge pull request #1 from Riverstone00/firebase-connection
+[31m|[m [31m|[m[32m\[m  
+[31m|[m [31m|[m * [33m535f7be[m firebase 연결
+[31m|[m [31m|[m[31m/[m  
+[31m|[m * [33m96a4b44[m first commit
+* [33mfcd5ca5[m[33m ([m[1;32mmaster[m[33m)[m Initial commit for postboard branch
