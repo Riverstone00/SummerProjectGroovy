@@ -188,24 +188,20 @@ class PostItem extends StatelessWidget {
   }
 
   Widget _buildFallbackImage() {
-    // course_list처럼 여러 대체 이미지 중 하나 선택
-    final List<String> fallbackImages = [
-      'assets/images/course1.png',
-      'assets/images/course2.png', 
-      'assets/images/course3.png',
-      'assets/images/course4.png',
-      'assets/images/nothing.png',
-    ];
-    
-    // 포스트 제목의 해시코드를 이용해 일관된 이미지 선택
-    int imageIndex = post.title.hashCode % fallbackImages.length;
+    // course_list와 일관되게 courseId 기반으로 이미지 선택
+    String courseId = post.id;
+    int imageIndex = courseId.isEmpty 
+        ? 0 // 기본값
+        : (courseId.hashCode % 4) + 1; // 1-4 사이의 값
     if (imageIndex < 0) imageIndex = -imageIndex; // 음수 방지
+    if (imageIndex == 0) imageIndex = 1; // 최소값 1로 보정
+    if (imageIndex > 4) imageIndex = ((imageIndex - 1) % 4) + 1; // 1-4 범위로 제한
     
     return Image.asset(
-      fallbackImages[imageIndex],
+      'assets/images/course$imageIndex.png',
       fit: BoxFit.cover,
       errorBuilder: (context, error, stackTrace) {
-        print('대체 이미지 로드 오류(${fallbackImages[imageIndex]}): $error');
+        print('대체 이미지 로드 오류(assets/images/course$imageIndex.png): $error');
         // 최후의 수단으로 컨테이너 표시
         return Container(
           color: Colors.grey.shade300,

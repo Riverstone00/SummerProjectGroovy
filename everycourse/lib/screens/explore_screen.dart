@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:everycourse/services/course_service.dart';
+import 'course_detail.dart';
 import 'seoul_page.dart';
 import 'full_univ.dart';
 import 'full_course.dart';
-import 'package:everycourse/services/course_service.dart';
-import 'course_detail.dart';
 
 class ExploreScreen extends StatefulWidget {
   const ExploreScreen({super.key});
