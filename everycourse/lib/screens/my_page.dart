@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:everycourse/services/user_service.dart';
 import 'student_verification_screen.dart';
+import 'package:everycourse/screens/bookmarked_courses.dart';
 
 class MyPage extends StatefulWidget {
   const MyPage({super.key});
@@ -132,6 +133,7 @@ class _MyPageState extends State<MyPage> {
                   ],
                 ),
                 const SizedBox(height: 30),
+
                 _buildSectionTitle('계정'),
                 _buildMenuItem('아이디'),
                 _buildMenuItem('비밀번호 변경'),
@@ -201,10 +203,18 @@ class _MyPageState extends State<MyPage> {
                 _buildMenuItem('리뷰(평점)'),
                 _buildDivider(),
                 _buildSectionTitle('북마크'),
-                _buildMenuItem('북마크한 코스'),
+                _buildMenuItem('북마크한 코스', onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const BookmarkedCoursesPage(),
+                    ),
+                  );
+                }),
                 const SizedBox(height: 32),
               ],
             ),
+
     );
   }
 
