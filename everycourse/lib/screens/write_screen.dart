@@ -24,7 +24,10 @@ class _WriteScreenState extends State<WriteScreen> {
   final _contentCtrl = TextEditingController();
   final _priceCtrl = TextEditingController();    // 가격 입력 컨트롤러
   final _timeCtrl = TextEditingController();     // 시간 입력 컨트롤러
-  final _locationCtrl = TextEditingController(); // 장소 입력 컨트롤러
+  final _locationCtrl = TextEditingController(); // 학교 입력 컨트롤러
+  final _placeCtrl = TextEditingController();    // 장소 입력 컨트롤러
+  
+  List<String> _places = []; // 입력된 장소들 리스트
 
   // 색상 팔레트
   static const Color _primaryColor = Color(0xFFFF597B);
@@ -87,6 +90,12 @@ class _WriteScreenState extends State<WriteScreen> {
       );
       return;
     }
+    if (_places.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: const Text('최소 하나 이상의 장소를 입력해주세요!'), backgroundColor: _primaryColor),
+      );
+      return;
+    }
 
     final newPost = Post(
       imagePath: kIsWeb ? null : _pickedImage!.path,
@@ -96,7 +105,7 @@ class _WriteScreenState extends State<WriteScreen> {
       priceAmount: _priceCtrl.text.isEmpty ? null : int.tryParse(_priceCtrl.text),
       timeMinutes: _timeCtrl.text.isEmpty ? null : int.tryParse(_timeCtrl.text),
       hashtags: _selectedTags.toList(),
-      places: _locationCtrl.text.isEmpty ? null : [_locationCtrl.text],
+      places: _places.isNotEmpty ? _places : null,
       location: _locationCtrl.text.isEmpty ? null : _locationCtrl.text,
       rating: 0.0,
       reviewCount: 0,
@@ -113,6 +122,7 @@ class _WriteScreenState extends State<WriteScreen> {
     _priceCtrl.dispose();
     _timeCtrl.dispose();
     _locationCtrl.dispose();
+    _placeCtrl.dispose();
     super.dispose();
   }
 
@@ -189,8 +199,8 @@ class _WriteScreenState extends State<WriteScreen> {
           _buildInputField(label: '내용', controller: _contentCtrl, hint: '내용을 작성해주세요', maxLines: 4),
           const SizedBox(height: 20),
 
-          // 장소
-          _buildInputField(label: '장소', controller: _locationCtrl, hint: '장소를 입력해주세요 (선택사항)', maxLines: 1),
+          // 학교
+          _buildInputField(label: '학교 (선택사항)', controller: _locationCtrl, hint: '학교명을 입력해주세요 (예: 동국대학교)', maxLines: 1),
           const SizedBox(height: 20),
 
           // 가격 (원 단위)
@@ -211,6 +221,10 @@ class _WriteScreenState extends State<WriteScreen> {
             maxLines: 1,
             keyboardType: TextInputType.number
           ),
+          const SizedBox(height: 24),
+
+          // 장소 입력
+          _buildPlaceSelector(),
           const SizedBox(height: 24),
 
           // 해시태그
@@ -258,6 +272,126 @@ class _WriteScreenState extends State<WriteScreen> {
         ),
       ]),
     );
+  }
+
+  Widget _buildPlaceSelector() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [BoxShadow(color: _secondaryColor.withAlpha(50), blurRadius: 8, offset: const Offset(0,2))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('데이트 장소 (최소 1개)', 
+            style: TextStyle(fontFamily: 'Cafe24Ssurround', fontSize: 18, fontWeight: FontWeight.bold, color: _primaryColor)),
+          const SizedBox(height: 12),
+          
+          // 장소 입력 필드
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _placeCtrl,
+                  style: const TextStyle(fontFamily: 'Cafe24Ssurround', fontSize: 16),
+                  decoration: InputDecoration(
+                    hintText: '장소를 입력하세요 (예: 홍대 카페거리)',
+                    hintStyle: TextStyle(fontFamily: 'Cafe24Ssurround', color: Colors.grey[400]),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: _accentColor)),
+                    focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: _primaryColor, width: 2)),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    filled: true,
+                    fillColor: _accentColor.withAlpha(30),
+                  ),
+                  onSubmitted: (value) => _addPlace(),
+                ),
+              ),
+              const SizedBox(width: 8),
+              ElevatedButton(
+                onPressed: _addPlace,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _primaryColor,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                ),
+                child: const Text('추가', style: TextStyle(color: Colors.white, fontFamily: 'Cafe24Ssurround')),
+              ),
+            ],
+          ),
+          
+          const SizedBox(height: 16),
+          
+          // 추가된 장소들 표시
+          if (_places.isNotEmpty) ...[
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: _places.asMap().entries.map((entry) {
+                int index = entry.key;
+                String place = entry.value;
+                return Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: _accentColor.withAlpha(100),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: _primaryColor, width: 1),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(place, style: TextStyle(
+                        fontFamily: 'Cafe24Ssurround',
+                        color: _primaryColor,
+                        fontSize: 14,
+                      )),
+                      const SizedBox(width: 4),
+                      GestureDetector(
+                        onTap: () => _removePlace(index),
+                        child: Icon(Icons.close, size: 16, color: _primaryColor),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
+          ] else ...[
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey.shade300),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline, color: Colors.grey.shade600, size: 20),
+                  const SizedBox(width: 8),
+                  Text('데이트 장소를 최소 1개 이상 추가해주세요', 
+                    style: TextStyle(fontFamily: 'Cafe24Ssurround', color: Colors.grey.shade600, fontSize: 14)),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  void _addPlace() {
+    if (_placeCtrl.text.trim().isNotEmpty) {
+      setState(() {
+        _places.add(_placeCtrl.text.trim());
+        _placeCtrl.clear();
+      });
+    }
+  }
+
+  void _removePlace(int index) {
+    setState(() {
+      _places.removeAt(index);
+    });
   }
 
   Widget _buildTagSelector() {
