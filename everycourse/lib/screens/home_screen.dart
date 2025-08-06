@@ -63,7 +63,49 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  // 새 게시물 작성 화면으로 이동
+  // 게시물 삭제
+  Future<void> _deletePost(Post post) async {
+    try {
+      final currentUser = _auth.currentUser;
+      if (currentUser == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('로그인이 필요합니다.')),
+        );
+        return;
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('게시물을 삭제 중입니다...'),
+            duration: Duration(seconds: 1),
+          ),
+        );
+      }
+
+      await _courseService.deleteCourse(post.id, currentUser.uid);
+      await _loadPosts(); // 목록 새로고침
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('게시물이 성공적으로 삭제되었습니다!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('게시물 삭제 중 오류가 발생했습니다: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      print('게시물 삭제 오류: $e');
+    }
+  }
   void _navigateToWriteScreen() {
     Navigator.push(
       context,
@@ -114,7 +156,11 @@ class _HomeScreenState extends State<HomeScreen> {
       case 0:
         return const ExploreScreen();
       case 1:
-        return FeedScreen(posts: _posts, onWritePressed: _navigateToWriteScreen);
+        return FeedScreen(
+          posts: _posts, 
+          onWritePressed: _navigateToWriteScreen,
+          onDeletePost: _deletePost,
+        );
       case 2:
         return MyPage();
       default:
