@@ -22,25 +22,15 @@ class _WriteScreenState extends State<WriteScreen> {
 
   final _titleCtrl = TextEditingController();
   final _contentCtrl = TextEditingController();
+  final _priceCtrl = TextEditingController();    // 가격 입력 컨트롤러
+  final _timeCtrl = TextEditingController();     // 시간 입력 컨트롤러
+  final _locationCtrl = TextEditingController(); // 장소 입력 컨트롤러
 
   // 색상 팔레트
   static const Color _primaryColor = Color(0xFFFF597B);
   static const Color _secondaryColor = Color(0xFFFF8E9E);
   static const Color _accentColor = Color(0xFFF9B5D0);
   static const Color _backgroundColor = Color(0xFFEEEEEE);
-
-  // 가격 선택
-  final List<String> _priceOptions = [
-    '3만원 이하',
-    '5만원 이하',
-    '10만원 이하',
-    '10만원 초과',
-  ];
-  String? _selectedPrice;
-
-  // 시간 선택 (double 제네릭)
-  final List<double> _timeOptions = List.generate(16, (i) => 0.5 * (i + 1));
-  double? _selectedTime;
 
   // 해시태그 선택
   final List<String> _allTags = [
@@ -79,15 +69,15 @@ class _WriteScreenState extends State<WriteScreen> {
       );
       return;
     }
-    if (_selectedPrice == null) {
+    if (_priceCtrl.text.isEmpty || int.tryParse(_priceCtrl.text) == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: const Text('가격을 선택해주세요!'), backgroundColor: _primaryColor),
+        SnackBar(content: const Text('유효한 가격을 입력해주세요!'), backgroundColor: _primaryColor),
       );
       return;
     }
-    if (_selectedTime == null) {
+    if (_timeCtrl.text.isEmpty || int.tryParse(_timeCtrl.text) == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: const Text('소요 시간을 선택해주세요!'), backgroundColor: _primaryColor),
+        SnackBar(content: const Text('유효한 소요 시간(분)을 입력해주세요!'), backgroundColor: _primaryColor),
       );
       return;
     }
@@ -102,10 +92,15 @@ class _WriteScreenState extends State<WriteScreen> {
       imagePath: kIsWeb ? null : _pickedImage!.path,
       webImageBytes: kIsWeb ? _webImage : null,
       title: _titleCtrl.text,
-      price: _selectedPrice,
-      duration: '$_selectedTime시간',
-      tags: _selectedTags.toList(),
       content: _contentCtrl.text,
+      priceAmount: _priceCtrl.text.isEmpty ? null : int.tryParse(_priceCtrl.text),
+      timeMinutes: _timeCtrl.text.isEmpty ? null : int.tryParse(_timeCtrl.text),
+      hashtags: _selectedTags.toList(),
+      places: _locationCtrl.text.isEmpty ? null : [_locationCtrl.text],
+      location: _locationCtrl.text.isEmpty ? null : _locationCtrl.text,
+      rating: 0.0,
+      reviewCount: 0,
+      likes: 0,
     );
     widget.onAdd(newPost);
     Navigator.of(context).pop();
@@ -115,6 +110,9 @@ class _WriteScreenState extends State<WriteScreen> {
   void dispose() {
     _titleCtrl.dispose();
     _contentCtrl.dispose();
+    _priceCtrl.dispose();
+    _timeCtrl.dispose();
+    _locationCtrl.dispose();
     super.dispose();
   }
 
@@ -191,25 +189,27 @@ class _WriteScreenState extends State<WriteScreen> {
           _buildInputField(label: '내용', controller: _contentCtrl, hint: '내용을 작성해주세요', maxLines: 4),
           const SizedBox(height: 20),
 
-          // 가격
-          _buildDropdownField<String>(
-            label: '가격',
-            value: _selectedPrice,
-            items: _priceOptions.map((p) =>
-              DropdownMenuItem(value: p, child: Text(p))
-            ).toList(),
-            onChanged: (v) => setState(() => _selectedPrice = v),
+          // 장소
+          _buildInputField(label: '장소', controller: _locationCtrl, hint: '장소를 입력해주세요 (선택사항)', maxLines: 1),
+          const SizedBox(height: 20),
+
+          // 가격 (원 단위)
+          _buildInputField(
+            label: '가격 (원)', 
+            controller: _priceCtrl, 
+            hint: '예: 50000', 
+            maxLines: 1,
+            keyboardType: TextInputType.number
           ),
           const SizedBox(height: 20),
 
-          // 소요 시간 (double)
-          _buildDropdownField<double>(
-            label: '소요 시간',
-            value: _selectedTime,
-            items: _timeOptions.map((t) =>
-              DropdownMenuItem(value: t, child: Text('${t}시간'))
-            ).toList(),
-            onChanged: (v) => setState(() => _selectedTime = v),
+          // 소요 시간 (분 단위)
+          _buildInputField(
+            label: '소요 시간 (분)', 
+            controller: _timeCtrl, 
+            hint: '예: 120', 
+            maxLines: 1,
+            keyboardType: TextInputType.number
           ),
           const SizedBox(height: 24),
 
@@ -231,6 +231,7 @@ class _WriteScreenState extends State<WriteScreen> {
     required TextEditingController controller,
     required String hint,
     int maxLines = 1,
+    TextInputType? keyboardType,
   }) {
     return Container(
       padding: const EdgeInsets.all(20), margin: const EdgeInsets.only(bottom: 20),
@@ -241,41 +242,13 @@ class _WriteScreenState extends State<WriteScreen> {
         Text(label, style: TextStyle(fontFamily: 'Cafe24Ssurround', fontSize: 18, fontWeight: FontWeight.bold, color: _primaryColor)),
         const SizedBox(height: 12),
         TextField(
-          controller: controller, maxLines: maxLines,
+          controller: controller, 
+          maxLines: maxLines,
+          keyboardType: keyboardType,
           style: const TextStyle(fontFamily: 'Cafe24Ssurround', fontSize: 16),
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: TextStyle(fontFamily: 'Cafe24Ssurround', color: Colors.grey[400]),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: _accentColor)),
-            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: _primaryColor, width: 2)),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            filled: true,
-            fillColor: _accentColor.withAlpha(30),
-          ),
-        ),
-      ]),
-    );
-  }
-
-  Widget _buildDropdownField<T>({
-    required String label,
-    required T? value,
-    required List<DropdownMenuItem<T>> items,
-    required void Function(T?) onChanged,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(20), margin: const EdgeInsets.only(bottom: 20),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: _secondaryColor.withAlpha(50), blurRadius: 8, offset: const Offset(0,2))],
-      ),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(label, style: TextStyle(fontFamily: 'Cafe24Ssurround', fontSize: 18, fontWeight: FontWeight.bold, color: _primaryColor)),
-        const SizedBox(height: 12),
-        DropdownButtonFormField<T>(
-          value: value,
-          items: items,
-          onChanged: onChanged,
-          decoration: InputDecoration(
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: _accentColor)),
             focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: _primaryColor, width: 2)),
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
