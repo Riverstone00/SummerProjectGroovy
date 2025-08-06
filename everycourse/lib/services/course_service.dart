@@ -212,6 +212,52 @@ class CourseService {
       return [];
     }
   }
+
+  // 해시태그 또는 location으로 코스 검색하기 (통합 검색)
+  Future<List<Map<String, dynamic>>> getCoursesByHashtagOrLocation(String searchTerm) async {
+    try {
+      // 1. 해시태그로 검색
+      final hashtagResults = await getCoursesByHashtag(searchTerm);
+      
+      // 2. location으로 검색
+      final locationSnapshot = await _firestore
+          .collection('courses')
+          .where('location', isEqualTo: searchTerm)
+          .orderBy('createdAt', descending: true)
+          .get();
+      
+      final locationResults = locationSnapshot.docs.map((doc) {
+        Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+        data['courseId'] = doc.id;
+        return data;
+      }).toList();
+      
+      // 3. 중복 제거하여 결합
+      final Set<String> addedIds = <String>{};
+      final List<Map<String, dynamic>> combinedResults = [];
+      
+      // 해시태그 결과 추가
+      for (var result in hashtagResults) {
+        if (!addedIds.contains(result['courseId'])) {
+          combinedResults.add(result);
+          addedIds.add(result['courseId']);
+        }
+      }
+      
+      // location 결과 추가 (중복되지 않은 것만)
+      for (var result in locationResults) {
+        if (!addedIds.contains(result['courseId'])) {
+          combinedResults.add(result);
+          addedIds.add(result['courseId']);
+        }
+      }
+      
+      return combinedResults;
+    } catch (e) {
+      print('통합 검색 오류: $e');
+      return [];
+    }
+  }
   
   // 인기 해시태그 목록 가져오기 (임시 구현 - 실제로는 별도의 통계 컬렉션을 사용하는 것이 좋음)
   Future<List<Map<String, dynamic>>> getPopularHashtags({int limit = 10}) async {

@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:everycourse/services/course_service.dart';
+import 'course_detail.dart';
 import 'seoul_page.dart';
 import 'full_univ.dart';
 import 'full_course.dart';
-import 'package:everycourse/services/course_service.dart';
-import 'course_detail.dart';
+import 'course_list.dart';
 
 class ExploreScreen extends StatefulWidget {
   const ExploreScreen({super.key});
@@ -84,7 +85,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                       context, "대학생의 숨은 데이트 코스", const FullUnivPage()),
                   const SizedBox(height: 20),
                   _buildHorizontalImageRow(
-                      context, ['서울', '경기', '부산', '인천'], isTheme: false),
+                      context, ['서울', '경기', '부산', '인천', '동국대학교', '홍익대학교', '연세대학교', '건국대학교'], isTheme: false),
                   const Padding(
                     padding: EdgeInsets.symmetric(horizontal: 16),
                     child: Divider(color: Colors.grey, thickness: 0.5),
@@ -217,11 +218,22 @@ class _ExploreScreenState extends State<ExploreScreen> {
         itemBuilder: (context, index) {
           return GestureDetector(
             onTap: () {
-              if (!isTheme && items[index] == '서울') {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const SeoulPage()),
-                );
+              if (!isTheme) {
+                // 지역이나 대학교 이름을 클릭했을 때 CourseList로 이동
+                if (items[index] == '서울') {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const SeoulPage()),
+                  );
+                } else {
+                  // 다른 지역이나 대학교인 경우 CourseList로 이동
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => CourseList(universityName: items[index]),
+                    ),
+                  );
+                }
               }
             },
             child: Container(

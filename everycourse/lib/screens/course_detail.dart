@@ -331,7 +331,23 @@ class _CourseDetailState extends State<CourseDetail> {
                     width: double.infinity,
                     height: 260,
                     fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => Image.asset('assets/images/course1.png', width: double.infinity, height: 260, fit: BoxFit.cover),
+                    errorBuilder: (context, error, stackTrace) {
+                      // courseId 기반으로 일관된 이미지 선택
+                      String courseId = widget.course['courseId'] ?? widget.course['id'] ?? '';
+                      int imageIndex = courseId.isEmpty 
+                          ? 1 // 기본값
+                          : (courseId.hashCode % 4) + 1; // 1-4 사이의 값
+                      if (imageIndex < 0) imageIndex = -imageIndex; // 음수 방지
+                      if (imageIndex == 0) imageIndex = 1; // 최소값 1로 보정
+                      if (imageIndex > 4) imageIndex = ((imageIndex - 1) % 4) + 1; // 1-4 범위로 제한
+                      
+                      return Image.asset(
+                        'assets/images/course$imageIndex.png', 
+                        width: double.infinity, 
+                        height: 260, 
+                        fit: BoxFit.cover
+                      );
+                    },
                   ),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
