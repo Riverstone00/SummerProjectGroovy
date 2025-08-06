@@ -24,8 +24,8 @@ class _CourseListState extends State<CourseList> {
 
   Future<void> _loadCoursesFromFirebase() async {
     try {
-      // 대학 이름으로 코스 검색 (해시태그 기반)
-      final courses = await _courseService.getCoursesByHashtag(widget.universityName);
+      // 대학 이름으로 코스 검색 (해시태그 또는 location 기반)
+      final courses = await _courseService.getCoursesByHashtagOrLocation(widget.universityName);
       
       setState(() {
         _courses = courses;

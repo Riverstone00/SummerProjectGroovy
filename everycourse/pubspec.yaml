@@ -67,6 +67,9 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
+  
+  # 앱 아이콘 자동 생성
+  flutter_launcher_icons: ^0.13.1
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -110,5 +113,13 @@ flutter:
   #       - asset: fonts/TrajanPro_Bold.ttf
   #         weight: 700
   #
+
+# 앱 아이콘 설정
+flutter_icons:
+  android: true
+  ios: false  # iOS 폴더가 없으므로 false로 설정
+  image_path: "assets/images/app_icon.png"  # 1024x1024 PNG 파일 준비
+  # adaptive_icon_background: "#FFFFFF"  # Android Adaptive Icon 배경색
+  # adaptive_icon_foreground: "assets/images/app_icon_foreground.png"  # Android Adaptive Icon 전경
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
