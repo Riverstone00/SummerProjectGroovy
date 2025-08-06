@@ -55,7 +55,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('회원가입이 완료되었습니다! 🎉')),
+          const SnackBar(content: Text('회원가입이 완료되었습니다!')),
         );
         Navigator.pop(context); // AuthScreen으로 돌아감
       }
@@ -154,3 +154,4 @@ class _RegistrationPageState extends State<RegistrationPage> {
     );
   }
 }
+
