@@ -7,6 +7,7 @@ class Post {
   final String id;
   final String? imagePath;         // 모바일 파일경로
   final Uint8List? webImageBytes;  // 웹 바이트 데이터
+  final String? imageUrl;          // Firebase Storage URL
   final String title;
   final String? price;
   final String? duration;
@@ -17,6 +18,7 @@ class Post {
     String? id,
     this.imagePath,
     this.webImageBytes,
+    this.imageUrl,
     required this.title,
     this.price,
     this.duration,
