@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../models/post.dart';
+import '../services/region_service.dart';
 
 class WriteScreen extends StatefulWidget {
   final Function(Post) onAdd;
@@ -25,9 +26,13 @@ class _WriteScreenState extends State<WriteScreen> {
   final _priceCtrl = TextEditingController();    // 가격 입력 컨트롤러
   final _timeCtrl = TextEditingController();     // 시간 입력 컨트롤러
   final _locationCtrl = TextEditingController(); // 학교 입력 컨트롤러
+  final _regionCtrl = TextEditingController();   // 지역 입력 컨트롤러
   final _placeCtrl = TextEditingController();    // 장소 입력 컨트롤러
   
   List<String> _places = []; // 입력된 장소들 리스트
+  
+  // Region 관련
+  final RegionService _regionService = RegionService();
 
   // 색상 팔레트
   static const Color _primaryColor = Color(0xFFFF597B);
@@ -40,6 +45,35 @@ class _WriteScreenState extends State<WriteScreen> {
     '맛집', '데이트', '여행', '카페', '야경', '문화', '산책', '힐링',
   ];
   final Set<String> _selectedTags = {};
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  // 학교와 지역 정보를 저장하는 메서드
+  Future<void> _saveLocationAndRegion() async {
+    final location = _locationCtrl.text.trim();
+    final region = _regionCtrl.text.trim();
+    
+    if (location.isNotEmpty && region.isNotEmpty) {
+      // 기존 지역 확인 (regionName으로 검색)
+      final existingRegion = await _regionService.findRegionByLocation(location);
+      
+      if (existingRegion == null) {
+        // 새로운 학교인 경우
+        final existingRegionByName = await _regionService.findRegionByName(region);
+        
+        if (existingRegionByName != null) {
+          // 기존 지역에 새 학교 추가
+          await _regionService.addLocationToRegion(existingRegionByName, location);
+        } else {
+          // 새 지역 생성 (Firebase 자동 ID 사용)
+          await _regionService.createRegion(region, location);
+        }
+      }
+    }
+  }
 
   Future<void> _pickImage() async {
     if (_isPickingImage) return;
@@ -65,7 +99,7 @@ class _WriteScreenState extends State<WriteScreen> {
     }
   }
 
-  void _savePost() {
+  void _savePost() async {
     if ((kIsWeb ? _webImage == null : _pickedImage == null) || _titleCtrl.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: const Text('이미지와 제목을 입력해주세요!'), backgroundColor: _primaryColor),
@@ -96,6 +130,9 @@ class _WriteScreenState extends State<WriteScreen> {
       );
       return;
     }
+    
+    // 학교와 지역 정보 저장 (게시글 저장 전에)
+    await _saveLocationAndRegion();
 
     final newPost = Post(
       imagePath: kIsWeb ? null : _pickedImage!.path,
@@ -200,7 +237,7 @@ class _WriteScreenState extends State<WriteScreen> {
           const SizedBox(height: 20),
 
           // 학교
-          _buildInputField(label: '학교 (선택사항)', controller: _locationCtrl, hint: '학교명을 입력해주세요 (예: 동국대학교)', maxLines: 1),
+          _buildLocationField(),
           const SizedBox(height: 20),
 
           // 가격 (원 단위)
@@ -236,6 +273,82 @@ class _WriteScreenState extends State<WriteScreen> {
           _buildSubmitButton(),
           const SizedBox(height: 20),
         ]),
+      ),
+    );
+  }
+
+  Widget _buildLocationField() {
+    return Container(
+      padding: const EdgeInsets.all(20), 
+      margin: const EdgeInsets.only(bottom: 20),
+      decoration: BoxDecoration(
+        color: Colors.white, 
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [BoxShadow(color: _secondaryColor.withAlpha(50), blurRadius: 8, offset: const Offset(0,2))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start, 
+        children: [
+          Text(
+            '학교 정보 (선택사항)', 
+            style: TextStyle(
+              fontFamily: 'Cafe24Ssurround', 
+              fontSize: 18, 
+              fontWeight: FontWeight.bold, 
+              color: _primaryColor
+            )
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                flex: 2,
+                child: TextField(
+                  controller: _locationCtrl, 
+                  style: const TextStyle(fontFamily: 'Cafe24Ssurround', fontSize: 16),
+                  decoration: InputDecoration(
+                    hintText: '학교명을 입력해주세요',
+                    hintStyle: TextStyle(fontFamily: 'Cafe24Ssurround', color: Colors.grey[400]),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12), 
+                      borderSide: BorderSide(color: _accentColor)
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12), 
+                      borderSide: BorderSide(color: _primaryColor, width: 2)
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    filled: true,
+                    fillColor: _accentColor.withAlpha(30),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                flex: 1,
+                child: TextField(
+                  controller: _regionCtrl,
+                  style: const TextStyle(fontFamily: 'Cafe24Ssurround', fontSize: 16),
+                  decoration: InputDecoration(
+                    hintText: '지역',
+                    hintStyle: TextStyle(fontFamily: 'Cafe24Ssurround', color: Colors.grey[400]),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12), 
+                      borderSide: BorderSide(color: _accentColor)
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12), 
+                      borderSide: BorderSide(color: _primaryColor, width: 2)
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    filled: true,
+                    fillColor: _accentColor.withAlpha(30),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ]
       ),
     );
   }
