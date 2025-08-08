@@ -4,7 +4,15 @@ import 'package:everycourse/services/course_service.dart';
 
 class CourseList extends StatefulWidget {
   final String universityName;
-  const CourseList({super.key, required this.universityName});
+  final String? hashtag; // 해시태그 필터링을 위한 새로운 파라미터
+  final String? title; // 커스텀 제목을 위한 파라미터
+  
+  const CourseList({
+    super.key, 
+    required this.universityName,
+    this.hashtag,
+    this.title,
+  });
 
   @override
   State<CourseList> createState() => _CourseListState();
@@ -24,8 +32,15 @@ class _CourseListState extends State<CourseList> {
 
   Future<void> _loadCoursesFromFirebase() async {
     try {
-      // 대학 이름으로 코스 검색 (해시태그 또는 location 기반)
-      final courses = await _courseService.getCoursesByHashtagOrLocation(widget.universityName);
+      List<Map<String, dynamic>> courses;
+      
+      // 해시태그가 지정된 경우 해시태그로 필터링, 아니면 기존 방식 사용
+      if (widget.hashtag != null) {
+        courses = await _courseService.getCoursesByHashtag(widget.hashtag!);
+      } else {
+        // 대학 이름으로 코스 검색 (해시태그 또는 location 기반)
+        courses = await _courseService.getCoursesByHashtagOrLocation(widget.universityName);
+      }
       
       setState(() {
         _courses = courses;
@@ -67,7 +82,7 @@ class _CourseListState extends State<CourseList> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.universityName),
+        title: Text(widget.title ?? widget.universityName),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 1,
