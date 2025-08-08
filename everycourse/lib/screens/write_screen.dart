@@ -34,6 +34,17 @@ class _WriteScreenState extends State<WriteScreen> {
   // Region 관련
   final RegionService _regionService = RegionService();
 
+  // 자동완성 관련
+  List<String> _allSchoolNames = [];
+  List<String> _allRegionNames = [];
+  List<String> _allHashtags = []; // 기존 해시태그들
+  List<String> _filteredSchools = [];
+  List<String> _filteredRegions = [];
+  List<String> _filteredHashtags = []; // 필터된 해시태그들
+  bool _showSchoolSuggestions = false;
+  bool _showRegionSuggestions = false;
+  bool _showHashtagSuggestions = false; // 해시태그 자동완성 표시 여부
+
   // 색상 팔레트
   static const Color _primaryColor = Color(0xFFFF597B);
   static const Color _secondaryColor = Color(0xFFFF8E9E);
@@ -45,10 +56,128 @@ class _WriteScreenState extends State<WriteScreen> {
     '맛집', '데이트', '여행', '카페', '야경', '문화', '산책', '힐링',
   ];
   final Set<String> _selectedTags = {};
+  final _hashtagCtrl = TextEditingController(); // 해시태그 입력 컨트롤러
 
   @override
   void initState() {
     super.initState();
+    _loadAutocompleteData();
+  }
+
+  // 자동완성 데이터 로드
+  Future<void> _loadAutocompleteData() async {
+    try {
+      final schoolNames = await _regionService.getAllSchoolNames();
+      final regionNames = await _regionService.getAllRegionNames();
+      final hashtags = await _regionService.getAllHashtags();
+      
+      setState(() {
+        _allSchoolNames = schoolNames;
+        _allRegionNames = regionNames;
+        _allHashtags = hashtags;
+      });
+    } catch (e) {
+      print('자동완성 데이터 로드 오류: $e');
+    }
+  }
+
+  // 학교명 필터링
+  void _filterSchools(String query) {
+    if (query.isEmpty) {
+      setState(() {
+        _showSchoolSuggestions = false;
+        _filteredSchools = [];
+      });
+      return;
+    }
+
+    final filtered = _allSchoolNames
+        .where((school) => school.toLowerCase().contains(query.toLowerCase()))
+        .take(5) // 최대 5개만 표시
+        .toList();
+
+    setState(() {
+      _filteredSchools = filtered;
+      _showSchoolSuggestions = filtered.isNotEmpty;
+    });
+  }
+
+  // 지역명 필터링
+  void _filterRegions(String query) {
+    if (query.isEmpty) {
+      setState(() {
+        _showRegionSuggestions = false;
+        _filteredRegions = [];
+      });
+      return;
+    }
+
+    final filtered = _allRegionNames
+        .where((region) => region.toLowerCase().contains(query.toLowerCase()))
+        .take(5) // 최대 5개만 표시
+        .toList();
+
+    setState(() {
+      _filteredRegions = filtered;
+      _showRegionSuggestions = filtered.isNotEmpty;
+    });
+  }
+
+  // 해시태그 필터링
+  void _filterHashtags(String query) {
+    if (query.isEmpty) {
+      setState(() {
+        _showHashtagSuggestions = false;
+        _filteredHashtags = [];
+      });
+      return;
+    }
+
+    final filtered = _allHashtags
+        .where((hashtag) => hashtag.toLowerCase().contains(query.toLowerCase()))
+        .take(5) // 최대 5개만 표시
+        .toList();
+
+    setState(() {
+      _filteredHashtags = filtered;
+      _showHashtagSuggestions = filtered.isNotEmpty;
+    });
+  }
+
+  // 자동완성 숨기기
+  void _hideAllSuggestions() {
+    setState(() {
+      _showSchoolSuggestions = false;
+      _showRegionSuggestions = false;
+      _showHashtagSuggestions = false;
+      _filteredSchools = [];
+      _filteredRegions = [];
+      _filteredHashtags = [];
+    });
+  }
+
+  // 학교 선택
+  void _selectSchool(String school) {
+    _locationCtrl.text = school;
+    _hideAllSuggestions();
+    FocusScope.of(context).unfocus(); // 키보드 숨기기
+  }
+
+  // 지역 선택
+  void _selectRegion(String region) {
+    _regionCtrl.text = region;
+    _hideAllSuggestions();
+    FocusScope.of(context).unfocus(); // 키보드 숨기기
+  }
+
+  // 해시태그 선택
+  void _selectHashtag(String hashtag) {
+    setState(() {
+      _selectedTags.add(hashtag);
+      _hashtagCtrl.clear();
+    });
+    _hideAllSuggestions();
+    FocusScope.of(context).unfocus(); // 키보드 숨기기
   }
 
   // 학교와 지역 정보를 저장하는 메서드
@@ -165,29 +294,35 @@ class _WriteScreenState extends State<WriteScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: _backgroundColor,
-      appBar: AppBar(
-        title: const Text(
-          '게시글 작성',
-          style: TextStyle(
-            fontFamily: 'Cafe24Ssurround',
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-        backgroundColor: _primaryColor,
-        elevation: 0,
-        actions: [
-          TextButton(onPressed: _savePost,
-            child: const Text('완료', style: TextStyle(
+    return GestureDetector(
+      onTap: () {
+        // 외부 터치 시 자동완성 숨기기 및 키보드 숨기기
+        _hideAllSuggestions();
+        FocusScope.of(context).unfocus();
+      },
+      child: Scaffold(
+        backgroundColor: _backgroundColor,
+        appBar: AppBar(
+          title: const Text(
+            '게시글 작성',
+            style: TextStyle(
               fontFamily: 'Cafe24Ssurround',
-              color: Colors.white, fontWeight: FontWeight.bold))),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          backgroundColor: _primaryColor,
+          elevation: 0,
+          actions: [
+            TextButton(onPressed: _savePost,
+              child: const Text('완료', style: TextStyle(
+                fontFamily: 'Cafe24Ssurround',
+                color: Colors.white, fontWeight: FontWeight.bold))),
+          ],
+        ),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           // 이미지 업로드 영역
           Container(
             padding: const EdgeInsets.all(16),
@@ -274,6 +409,7 @@ class _WriteScreenState extends State<WriteScreen> {
           const SizedBox(height: 20),
         ]),
       ),
+      ),
     );
   }
 
@@ -303,47 +439,119 @@ class _WriteScreenState extends State<WriteScreen> {
             children: [
               Expanded(
                 flex: 2,
-                child: TextField(
-                  controller: _locationCtrl, 
-                  style: const TextStyle(fontFamily: 'Cafe24Ssurround', fontSize: 16),
-                  decoration: InputDecoration(
-                    hintText: '학교명을 입력해주세요',
-                    hintStyle: TextStyle(fontFamily: 'Cafe24Ssurround', color: Colors.grey[400]),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12), 
-                      borderSide: BorderSide(color: _accentColor)
+                child: Column(
+                  children: [
+                    TextField(
+                      controller: _locationCtrl, 
+                      style: const TextStyle(fontFamily: 'Cafe24Ssurround', fontSize: 16),
+                      onChanged: _filterSchools,
+                      onTap: () {
+                        if (_locationCtrl.text.isNotEmpty) {
+                          _filterSchools(_locationCtrl.text);
+                        }
+                      },
+                      decoration: InputDecoration(
+                        hintText: '학교명을 입력해주세요',
+                        hintStyle: TextStyle(fontFamily: 'Cafe24Ssurround', color: Colors.grey[400]),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12), 
+                          borderSide: BorderSide(color: _accentColor)
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12), 
+                          borderSide: BorderSide(color: _primaryColor, width: 2)
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        filled: true,
+                        fillColor: _accentColor.withAlpha(30),
+                      ),
                     ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12), 
-                      borderSide: BorderSide(color: _primaryColor, width: 2)
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    filled: true,
-                    fillColor: _accentColor.withAlpha(30),
-                  ),
+                    // 학교 자동완성 목록
+                    if (_showSchoolSuggestions)
+                      Container(
+                        margin: const EdgeInsets.only(top: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          border: Border.all(color: _accentColor),
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [BoxShadow(color: Colors.grey.withOpacity(0.3), blurRadius: 4, offset: const Offset(0, 2))],
+                        ),
+                        child: ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: _filteredSchools.length,
+                          itemBuilder: (context, index) {
+                            final school = _filteredSchools[index];
+                            return ListTile(
+                              dense: true,
+                              title: Text(
+                                school,
+                                style: const TextStyle(fontFamily: 'Cafe24Ssurround', fontSize: 14),
+                              ),
+                              onTap: () => _selectSchool(school),
+                            );
+                          },
+                        ),
+                      ),
+                  ],
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 flex: 1,
-                child: TextField(
-                  controller: _regionCtrl,
-                  style: const TextStyle(fontFamily: 'Cafe24Ssurround', fontSize: 16),
-                  decoration: InputDecoration(
-                    hintText: '지역',
-                    hintStyle: TextStyle(fontFamily: 'Cafe24Ssurround', color: Colors.grey[400]),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12), 
-                      borderSide: BorderSide(color: _accentColor)
+                child: Column(
+                  children: [
+                    TextField(
+                      controller: _regionCtrl,
+                      style: const TextStyle(fontFamily: 'Cafe24Ssurround', fontSize: 16),
+                      onChanged: _filterRegions,
+                      onTap: () {
+                        if (_regionCtrl.text.isNotEmpty) {
+                          _filterRegions(_regionCtrl.text);
+                        }
+                      },
+                      decoration: InputDecoration(
+                        hintText: '지역',
+                        hintStyle: TextStyle(fontFamily: 'Cafe24Ssurround', color: Colors.grey[400]),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12), 
+                          borderSide: BorderSide(color: _accentColor)
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12), 
+                          borderSide: BorderSide(color: _primaryColor, width: 2)
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        filled: true,
+                        fillColor: _accentColor.withAlpha(30),
+                      ),
                     ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12), 
-                      borderSide: BorderSide(color: _primaryColor, width: 2)
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    filled: true,
-                    fillColor: _accentColor.withAlpha(30),
-                  ),
+                    // 지역 자동완성 목록
+                    if (_showRegionSuggestions)
+                      Container(
+                        margin: const EdgeInsets.only(top: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          border: Border.all(color: _accentColor),
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [BoxShadow(color: Colors.grey.withOpacity(0.3), blurRadius: 4, offset: const Offset(0, 2))],
+                        ),
+                        child: ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: _filteredRegions.length,
+                          itemBuilder: (context, index) {
+                            final region = _filteredRegions[index];
+                            return ListTile(
+                              dense: true,
+                              title: Text(
+                                region,
+                                style: const TextStyle(fontFamily: 'Cafe24Ssurround', fontSize: 14),
+                              ),
+                              onTap: () => _selectRegion(region),
+                            );
+                          },
+                        ),
+                      ),
+                  ],
                 ),
               ),
             ],
@@ -516,6 +724,127 @@ class _WriteScreenState extends State<WriteScreen> {
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text('태그 선택 (최소 1개)', style: TextStyle(fontFamily: 'Cafe24Ssurround', fontSize: 18, fontWeight: FontWeight.bold, color: _primaryColor)),
         const SizedBox(height: 16),
+        
+        // 해시태그 텍스트 입력 필드
+        Column(
+          children: [
+            TextField(
+              controller: _hashtagCtrl,
+              style: const TextStyle(fontFamily: 'Cafe24Ssurround', fontSize: 16),
+              onChanged: _filterHashtags,
+              onTap: () {
+                if (_hashtagCtrl.text.isNotEmpty) {
+                  _filterHashtags(_hashtagCtrl.text);
+                }
+              },
+              onSubmitted: (value) {
+                if (value.trim().isNotEmpty && !_selectedTags.contains(value.trim())) {
+                  setState(() {
+                    _selectedTags.add(value.trim());
+                    _hashtagCtrl.clear();
+                  });
+                  _hideAllSuggestions();
+                }
+              },
+              decoration: InputDecoration(
+                hintText: '해시태그를 입력하거나 아래에서 선택해주세요',
+                hintStyle: TextStyle(fontFamily: 'Cafe24Ssurround', color: Colors.grey[400]),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: _accentColor)
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: _primaryColor, width: 2)
+                ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                filled: true,
+                fillColor: _accentColor.withAlpha(30),
+                suffixIcon: IconButton(
+                  icon: Icon(Icons.add, color: _primaryColor),
+                  onPressed: () {
+                    final value = _hashtagCtrl.text.trim();
+                    if (value.isNotEmpty && !_selectedTags.contains(value)) {
+                      setState(() {
+                        _selectedTags.add(value);
+                        _hashtagCtrl.clear();
+                      });
+                      _hideAllSuggestions();
+                    }
+                  },
+                ),
+              ),
+            ),
+            
+            // 해시태그 자동완성 목록
+            if (_showHashtagSuggestions)
+              Container(
+                margin: const EdgeInsets.only(top: 4),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  border: Border.all(color: _accentColor),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [BoxShadow(color: Colors.grey.withOpacity(0.3), blurRadius: 4, offset: const Offset(0, 2))],
+                ),
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: _filteredHashtags.length,
+                  itemBuilder: (context, index) {
+                    final hashtag = _filteredHashtags[index];
+                    return ListTile(
+                      dense: true,
+                      title: Text(
+                        hashtag,
+                        style: const TextStyle(fontFamily: 'Cafe24Ssurround', fontSize: 14),
+                      ),
+                      leading: Icon(Icons.tag, color: _primaryColor, size: 18),
+                      onTap: () => _selectHashtag(hashtag),
+                    );
+                  },
+                ),
+              ),
+          ],
+        ),
+        
+        const SizedBox(height: 16),
+        
+        // 선택된 해시태그들 표시
+        if (_selectedTags.isNotEmpty) ...[
+          Text('선택된 태그:', style: TextStyle(fontFamily: 'Cafe24Ssurround', fontSize: 14, fontWeight: FontWeight.w600, color: _primaryColor)),
+          const SizedBox(height: 8),
+          Wrap(spacing: 8, runSpacing: 8, children: _selectedTags.map((tag) {
+            return Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: _primaryColor,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(tag, style: const TextStyle(
+                    fontFamily: 'Cafe24Ssurround',
+                    color: Colors.white,
+                    fontWeight: FontWeight.w500,
+                    fontSize: 12,
+                  )),
+                  const SizedBox(width: 4),
+                  GestureDetector(
+                    onTap: () => setState(() {
+                      _selectedTags.remove(tag);
+                    }),
+                    child: const Icon(Icons.close, size: 14, color: Colors.white),
+                  ),
+                ],
+              ),
+            );
+          }).toList()),
+          const SizedBox(height: 16),
+        ],
+        
+        // 기본 해시태그 선택지
+        Text('추천 태그:', style: TextStyle(fontFamily: 'Cafe24Ssurround', fontSize: 14, fontWeight: FontWeight.w600, color: _primaryColor)),
+        const SizedBox(height: 8),
         Wrap(spacing: 10, runSpacing: 10, children: _allTags.map((tag) {
           final selected = _selectedTags.contains(tag);
           return GestureDetector(

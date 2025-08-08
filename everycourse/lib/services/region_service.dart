@@ -5,6 +5,86 @@ class RegionService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final CourseService _courseService = CourseService();
 
+  // 자동완성용: 모든 지역명 가져오기
+  Future<List<String>> getAllRegionNames() async {
+    try {
+      final querySnapshot = await _firestore.collection('regions').get();
+      return querySnapshot.docs.map((doc) {
+        final data = doc.data();
+        return data['regionName'] as String? ?? '';
+      }).where((name) => name.isNotEmpty).toList();
+    } catch (e) {
+      print('지역명 목록 로드 오류: $e');
+      return [];
+    }
+  }
+
+  // 자동완성용: 모든 학교명 가져오기
+  Future<List<String>> getAllSchoolNames() async {
+    try {
+      final querySnapshot = await _firestore.collection('regions').get();
+      final Set<String> schoolNames = <String>{};
+      
+      for (var doc in querySnapshot.docs) {
+        final data = doc.data();
+        final schools = data['schools'] as List<dynamic>? ?? [];
+        for (var school in schools) {
+          final schoolName = school['name'] as String?;
+          if (schoolName != null && schoolName.isNotEmpty) {
+            schoolNames.add(schoolName);
+          }
+        }
+      }
+      
+      return schoolNames.toList()..sort();
+    } catch (e) {
+      print('학교명 목록 로드 오류: $e');
+      return [];
+    }
+  }
+
+  // 자동완성용: 모든 해시태그 가져오기
+  Future<List<String>> getAllHashtags() async {
+    try {
+      final querySnapshot = await _firestore.collection('posts').get();
+      final Set<String> hashtags = <String>{};
+      
+      // 기본 해시태그 목록 (데이터베이스에 데이터가 없을 때 사용)
+      final defaultHashtags = {
+        '맛집', '데이트', '여행', '카페', '야경', '문화', '산책', '힐링',
+        '쇼핑', '영화', '공연', '축제', '스포츠', '게임', '독서', '음악',
+        '예술', '사진', '드라이브', '피크닉', '바다', '산', '공원', '박물관',
+        '전시회', '놀이공원', '동물원', '수족관', '온천', '스키', '캠핑'
+      };
+      
+      // 기본 해시태그 추가
+      hashtags.addAll(defaultHashtags);
+      
+      // 데이터베이스에서 기존 해시태그 가져오기
+      for (var doc in querySnapshot.docs) {
+        final data = doc.data();
+        final postHashtags = data['hashtags'] as List<dynamic>? ?? [];
+        for (var hashtag in postHashtags) {
+          final hashtagStr = hashtag as String?;
+          if (hashtagStr != null && hashtagStr.isNotEmpty) {
+            hashtags.add(hashtagStr);
+          }
+        }
+      }
+      
+      return hashtags.toList()..sort();
+    } catch (e) {
+      print('해시태그 목록 로드 오류: $e');
+      // 오류 발생시 기본 해시태그 반환
+      return [
+        '맛집', '데이트', '여행', '카페', '야경', '문화', '산책', '힐링',
+        '쇼핑', '영화', '공연', '축제', '스포츠', '게임', '독서', '음악',
+        '예술', '사진', '드라이브', '피크닉', '바다', '산', '공원', '박물관',
+        '전시회', '놀이공원', '동물원', '수족관', '온천', '스키', '캠핑'
+      ];
+    }
+  }
+
   // 모든 지역 가져오기
   Future<List<Map<String, dynamic>>> getAllRegions() async {
     try {
