@@ -184,7 +184,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           onDeletePost: _deletePost,
         );
       case 2:
-        return MyPage();
+        return MyPage(onTabChanged: _onItemTapped);
       default:
         return const ExploreScreen();
     }
