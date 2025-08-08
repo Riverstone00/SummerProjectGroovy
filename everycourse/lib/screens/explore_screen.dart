@@ -357,6 +357,38 @@ class _ExploreScreenState extends State<ExploreScreen> {
                     ),
                   );
                 }
+              } else {
+                // 테마별 클릭 시 해시태그로 필터링된 코스 목록으로 이동
+                String hashtag;
+                String title;
+                
+                switch (item) {
+                  case '감성 카페':
+                    hashtag = '카페';
+                    title = '감성 카페 코스';
+                    break;
+                  case '연인과 걷기 좋은 장소':
+                    hashtag = '산책';
+                    title = '산책 코스';
+                    break;
+                  case '인생 포토존':
+                    hashtag = '사진';
+                    title = '포토존 코스';
+                    break;
+                  default:
+                    return;
+                }
+                
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => CourseList(
+                      universityName: '', // 해시태그 검색이므로 빈 문자열
+                      hashtag: hashtag,
+                      title: title,
+                    ),
+                  ),
+                );
               }
             },
             child: Container(
