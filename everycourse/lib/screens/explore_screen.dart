@@ -425,9 +425,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
     );
   }
 
-  // 인기 데이트 코스
+   // 인기 데이트 코스
   Widget _buildPopularCourse() {
-    // 인기 코스가 없으면 안내 메시지 표시
     if (_popularCourses.isEmpty) {
       return const Padding(
         padding: EdgeInsets.all(16),
@@ -437,141 +436,154 @@ class _ExploreScreenState extends State<ExploreScreen> {
       );
     }
 
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          for (final course in _popularCourses)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: GestureDetector(
-                onTap: () {
-                  // 코스 상세 화면으로 이동 & 조회수 증가
-                  _courseService.incrementCourseViewCount(course['courseId']);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => CourseDetail(course: course),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 12), // ✅ 위쪽 간격
+        SizedBox(
+          height: 250, // 카드 전체 높이 지정
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            itemCount: _popularCourses.length,
+            itemBuilder: (context, index) {
+              final course = _popularCourses[index];
+              return Container(
+                width: 330,
+                margin: const EdgeInsets.only(right: 16),
+                child: GestureDetector(
+                  onTap: () {
+                    _courseService.incrementCourseViewCount(course['courseId']);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => CourseDetail(course: course),
+                      ),
+                    );
+                  },
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(10),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.3),
+                          spreadRadius: 1,
+                          blurRadius: 5,
+                        ),
+                      ],
                     ),
-                  );
-                },
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(10),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withOpacity(0.3),
-                        spreadRadius: 1,
-                        blurRadius: 5,
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      ClipRRect(
-                        borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(10),
-                        ),
-                        child:
-                            course['imageUrl'] != null &&
-                                course['imageUrl'].toString().isNotEmpty
-                            ? Image.network(
-                                course['imageUrl'],
-                                height: 150,
-                                width: double.infinity,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) {
-                                  // courseId 기반으로 일관된 이미지 선택 (목록 화면과 동일한 방식)
-                                  String courseId =
-                                      course['courseId'] ?? course['id'] ?? '';
-                                  int imageIndex = courseId.isEmpty
-                                      ? 1
-                                      : (courseId.hashCode % 4) +
-                                            1; // 1-4 사이의 값
-                                  return Image.asset(
-                                    'assets/images/course$imageIndex.png',
-                                    height: 150,
-                                    width: double.infinity,
-                                    fit: BoxFit.cover,
-                                  );
-                                },
-                              )
-                            : Builder(
-                                builder: (context) {
-                                  // imageUrl이 없는 경우도 courseId 기반으로 이미지 선택
-                                  String courseId =
-                                      course['courseId'] ?? course['id'] ?? '';
-                                  int imageIndex = courseId.isEmpty
-                                      ? 1
-                                      : (courseId.hashCode % 4) +
-                                            1; // 1-4 사이의 값
-                                  return Image.asset(
-                                    'assets/images/course$imageIndex.png',
-                                    height: 150,
-                                    width: double.infinity,
-                                    fit: BoxFit.cover,
-                                  );
-                                },
-                              ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              course['title'] ?? '제목 없음',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                fontFamily: 'Cafe24Ssurround',
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              course['description'] ??
-                                  '이 코스는 대학생들에게 인기 있는 데이트 코스입니다.',
-                              style: const TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey,
-                                fontFamily: 'Cafe24Ssurround',
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                const Icon(
-                                  Icons.visibility,
-                                  color: Colors.blue,
-                                  size: 16,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        ClipRRect(
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(10),
+                          ),
+                          child:
+                              course['imageUrl'] != null &&
+                                  course['imageUrl'].toString().isNotEmpty
+                              ? Image.network(
+                                  course['imageUrl'],
+                                  height: 130,
+                                  width: double.infinity,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    String courseId =
+                                        course['courseId'] ??
+                                        course['id'] ??
+                                        '';
+                                    int imageIndex = courseId.isEmpty
+                                        ? 1
+                                        : (courseId.hashCode % 4) + 1;
+                                    return Image.asset(
+                                      'assets/images/course$imageIndex.png',
+                                      height: 130,
+                                      width: double.infinity,
+                                      fit: BoxFit.cover,
+                                    );
+                                  },
+                                )
+                              : Builder(
+                                  builder: (context) {
+                                    String courseId =
+                                        course['courseId'] ??
+                                        course['id'] ??
+                                        '';
+                                    int imageIndex = courseId.isEmpty
+                                        ? 1
+                                        : (courseId.hashCode % 4) + 1;
+                                    return Image.asset(
+                                      'assets/images/course$imageIndex.png',
+                                      height: 130,
+                                      width: double.infinity,
+                                      fit: BoxFit.cover,
+                                    );
+                                  },
                                 ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  '${course['viewcount'] ?? 0}',
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey,
-                                    fontFamily: 'Cafe24Ssurround',
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                course['title'] ?? '제목 없음',
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'Cafe24Ssurround',
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                course['description'] ??
+                                    '이 코스는 대학생들에게 인기 있는 데이트 코스입니다.',
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.grey,
+                                  fontFamily: 'Cafe24Ssurround',
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 8),
+                              Row(
+                                children: [
+                                  const Icon(
+                                    Icons.visibility,
+                                    color: Colors.blue,
+                                    size: 16,
                                   ),
-                                ),
-                                const SizedBox(width: 12),
-                                if (course['hashtags'] != null &&
-                                    (course['hashtags'] as List).isNotEmpty)
-                                  ..._buildHashtags(course['hashtags']),
-                              ],
-                            ),
-                          ],
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    '${course['viewcount'] ?? 0}',
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey,
+                                      fontFamily: 'Cafe24Ssurround',
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  if (course['hashtags'] != null &&
+                                      (course['hashtags'] as List).isNotEmpty)
+                                    ..._buildHashtags(course['hashtags']),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ),
-        ],
-      ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 
