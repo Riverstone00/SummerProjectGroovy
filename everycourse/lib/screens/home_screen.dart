@@ -14,7 +14,7 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   int _selectedIndex = 0;
   
   // 게시물 목록
@@ -23,10 +23,31 @@ class _HomeScreenState extends State<HomeScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   bool _isLoading = false;
   
+  // FeedScreen에 접근하기 위한 GlobalKey
+  final GlobalKey<FeedScreenState> _feedScreenKey = GlobalKey<FeedScreenState>();
+  
   @override
   void initState() {
     super.initState();
     _loadPosts();
+    // 앱 라이프사이클 관찰자 등록
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    // 앱 라이프사이클 관찰자 해제
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    // 앱이 다시 활성화될 때 FeedScreen 새로고침
+    if (state == AppLifecycleState.resumed && _selectedIndex == 1) {
+      _feedScreenKey.currentState?.refreshStudentVerification();
+    }
   }
   
   // Firebase에서 로그인한 유저의 게시물 불러오기
@@ -157,6 +178,7 @@ class _HomeScreenState extends State<HomeScreen> {
         return const ExploreScreen();
       case 1:
         return FeedScreen(
+          key: _feedScreenKey,
           posts: _posts, 
           onWritePressed: _navigateToWriteScreen,
           onDeletePost: _deletePost,
@@ -172,6 +194,13 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       _selectedIndex = index;
     });
+    
+    // 게시 탭으로 전환할 때 학생 인증 상태 새로고침
+    if (index == 1) {
+      Future.delayed(const Duration(milliseconds: 100), () {
+        _feedScreenKey.currentState?.refreshStudentVerification();
+      });
+    }
   }
 
   @override

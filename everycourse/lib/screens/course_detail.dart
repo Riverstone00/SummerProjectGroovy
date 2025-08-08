@@ -31,6 +31,12 @@ class _CourseDetailState extends State<CourseDetail> {
   @override
   void initState() {
     super.initState();
+    // 전달받은 코스 데이터 로깅
+    print('CourseDetail: 전달받은 코스 데이터: ${widget.course}');
+    print('CourseDetail: imageUrl = ${widget.course['imageUrl']}');
+    print('CourseDetail: image = ${widget.course['image']}');
+    print('CourseDetail: description = ${widget.course['description']}');
+    print('CourseDetail: title = ${widget.course['title']}');
     _initializeState(); // 초기 상태 불러오기 (좋아요/북마크/별점 등)
   }
 
@@ -326,27 +332,50 @@ class _CourseDetailState extends State<CourseDetail> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // 대표 이미지
-                  Image.network(
-                    widget.course['image'] ?? 'https://via.placeholder.com/300',
-                    width: double.infinity,
-                    height: 260,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      // courseId 기반으로 일관된 이미지 선택
-                      String courseId = widget.course['courseId'] ?? widget.course['id'] ?? '';
-                      int imageIndex = courseId.isEmpty 
-                          ? 1 // 기본값
-                          : (courseId.hashCode % 4) + 1; // 1-4 사이의 값
-                      if (imageIndex < 0) imageIndex = -imageIndex; // 음수 방지
-                      if (imageIndex == 0) imageIndex = 1; // 최소값 1로 보정
-                      if (imageIndex > 4) imageIndex = ((imageIndex - 1) % 4) + 1; // 1-4 범위로 제한
-                      
-                      return Image.asset(
-                        'assets/images/course$imageIndex.png', 
-                        width: double.infinity, 
-                        height: 260, 
-                        fit: BoxFit.cover
-                      );
+                  Builder(
+                    builder: (context) {
+                      String? imageUrl = widget.course['imageUrl'] ?? widget.course['image'];
+                      if (imageUrl != null && imageUrl.isNotEmpty) {
+                        return Image.network(
+                          imageUrl,
+                          width: double.infinity,
+                          height: 260,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            // courseId 기반으로 일관된 이미지 선택
+                            String courseId = widget.course['courseId'] ?? widget.course['id'] ?? '';
+                            int imageIndex = courseId.isEmpty 
+                                ? 1 // 기본값
+                                : (courseId.hashCode % 4) + 1; // 1-4 사이의 값
+                            if (imageIndex < 0) imageIndex = -imageIndex; // 음수 방지
+                            if (imageIndex == 0) imageIndex = 1; // 최소값 1로 보정
+                            if (imageIndex > 4) imageIndex = ((imageIndex - 1) % 4) + 1; // 1-4 범위로 제한
+                            
+                            return Image.asset(
+                              'assets/images/course$imageIndex.png', 
+                              width: double.infinity, 
+                              height: 260, 
+                              fit: BoxFit.cover
+                            );
+                          },
+                        );
+                      } else {
+                        // imageUrl이 없는 경우도 courseId 기반으로 이미지 선택
+                        String courseId = widget.course['courseId'] ?? widget.course['id'] ?? '';
+                        int imageIndex = courseId.isEmpty 
+                            ? 1 // 기본값
+                            : (courseId.hashCode % 4) + 1; // 1-4 사이의 값
+                        if (imageIndex < 0) imageIndex = -imageIndex; // 음수 방지
+                        if (imageIndex == 0) imageIndex = 1; // 최소값 1로 보정
+                        if (imageIndex > 4) imageIndex = ((imageIndex - 1) % 4) + 1; // 1-4 범위로 제한
+                        
+                        return Image.asset(
+                          'assets/images/course$imageIndex.png', 
+                          width: double.infinity, 
+                          height: 260, 
+                          fit: BoxFit.cover
+                        );
+                      }
                     },
                   ),
                   Padding(
@@ -393,7 +422,7 @@ class _CourseDetailState extends State<CourseDetail> {
                   ),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
-                    child: Text(widget.course['description'] ?? '설명이 없습니다.', style: const TextStyle(fontSize: 15)),
+                    child: Text(widget.course['content'] ?? widget.course['description'] ?? '설명이 없습니다.', style: const TextStyle(fontSize: 15)),
                   ),
                   // 해시태그
                   if (hashtags.isNotEmpty)
