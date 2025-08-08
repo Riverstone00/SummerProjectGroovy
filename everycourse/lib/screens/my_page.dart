@@ -5,7 +5,9 @@ import 'student_verification_screen.dart';
 import 'package:everycourse/screens/bookmarked_courses.dart';
 
 class MyPage extends StatefulWidget {
-  const MyPage({super.key});
+  final Function(int)? onTabChanged; // 탭 변경 콜백 추가
+  
+  const MyPage({super.key, this.onTabChanged});
 
   @override
   State<MyPage> createState() => _MyPageState();
@@ -115,7 +117,6 @@ class _MyPageState extends State<MyPage> {
                                 color: Colors.purple,
                               ),
                             ),
-                            Icon(Icons.female, color: Colors.red, size: 18),
                           ],
                         ),
                         const SizedBox(height: 8),
@@ -124,8 +125,6 @@ class _MyPageState extends State<MyPage> {
                             isStudentVerified
                                 ? _buildTag('인증✔', Colors.grey.shade50)
                                 : _buildTag('미인증', Colors.grey.shade50),
-                            const SizedBox(width: 4),
-                            _buildTag('2002.2.2', Colors.grey.shade100),
                           ],
                         ),
                       ],
@@ -198,9 +197,18 @@ class _MyPageState extends State<MyPage> {
                 ),
                 _buildDivider(),
                 _buildSectionTitle('코스 관리'),
-                _buildMenuItem('코스 올리기'),
-                _buildMenuItem('내가 등록한 코스'),
-                _buildMenuItem('리뷰(평점)'),
+                _buildMenuItem('코스 올리기', onTap: () {
+                  // 게시 탭(인덱스 1)으로 이동
+                  if (widget.onTabChanged != null) {
+                    widget.onTabChanged!(1);
+                  }
+                }),
+                _buildMenuItem('내가 등록한 코스', onTap: () {
+                  // 게시 탭(인덱스 1)으로 이동
+                  if (widget.onTabChanged != null) {
+                    widget.onTabChanged!(1);
+                  }
+                }),
                 _buildDivider(),
                 _buildSectionTitle('북마크'),
                 _buildMenuItem('북마크한 코스', onTap: () {
