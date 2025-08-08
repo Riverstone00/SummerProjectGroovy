@@ -30,9 +30,9 @@ class _ExploreScreenState extends State<ExploreScreen> {
     _loadCoursesFromFirebase();
   }
 
-  // 서울 region의 실제 ID를 찾아 반환
-  Future<String?> _getSeoulRegionId() async {
-    return await _regionService.findRegionByName('서울');
+  // 지역의 실제 ID를 찾아 반환
+  Future<String?> _getRegionId(String regionName) async {
+    return await _regionService.findRegionByName(regionName);
   }
 
   Future<void> _loadCoursesFromFirebase() async {
@@ -319,44 +319,68 @@ class _ExploreScreenState extends State<ExploreScreen> {
           return GestureDetector(
             onTap: () {
               if (!isTheme) {
-                if (item == '서울') {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => FutureBuilder<String?>(
-                        future: _getSeoulRegionId(),
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState == ConnectionState.waiting) {
-                            return const Scaffold(
-                              body: Center(child: CircularProgressIndicator()),
-                            );
-                          }
-                          
-                          final regionId = snapshot.data;
-                          if (regionId == null) {
-                            return const Scaffold(
-                              body: Center(
-                                child: Text('서울 지역 정보를 찾을 수 없습니다.'),
-                              ),
-                            );
-                          }
-                          
-                          return RegionPage(
-                            regionId: regionId, 
-                            regionName: '서울'
+                // 모든 지역에 대해 통일된 처리
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => FutureBuilder<String?>(
+                      future: _getRegionId(item),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return const Scaffold(
+                            body: Center(child: CircularProgressIndicator()),
                           );
-                        },
-                      ),
+                        }
+                        
+                        final regionId = snapshot.data;
+                        if (regionId == null) {
+                          return Scaffold(
+                            body: Center(
+                              child: Text('$item 지역 정보를 찾을 수 없습니다.'),
+                            ),
+                          );
+                        }
+                        
+                        return RegionPage(
+                          regionId: regionId, 
+                          regionName: item
+                        );
+                      },
                     ),
-                  );
-                } else {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => CourseList(universityName: item),
-                    ),
-                  );
+                  ),
+                );
+              } else {
+                // 테마별 클릭 시 해시태그로 필터링된 코스 목록으로 이동
+                String hashtag;
+                String title;
+                
+                switch (item) {
+                  case '감성 카페':
+                    hashtag = '카페';
+                    title = '감성 카페 코스';
+                    break;
+                  case '연인과 걷기 좋은 장소':
+                    hashtag = '산책';
+                    title = '산책 코스';
+                    break;
+                  case '인생 포토존':
+                    hashtag = '사진';
+                    title = '포토존 코스';
+                    break;
+                  default:
+                    return;
                 }
+                
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => CourseList(
+                      universityName: '', // 해시태그 검색이므로 빈 문자열
+                      hashtag: hashtag,
+                      title: title,
+                    ),
+                  ),
+                );
               }
             },
             child: Container(

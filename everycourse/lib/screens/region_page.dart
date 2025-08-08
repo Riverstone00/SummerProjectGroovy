@@ -146,8 +146,21 @@ class _RegionPageState extends State<RegionPage> {
                                 ],
                               ),
                               const SizedBox(height: 8),
-                              // 설명 부분 제거 - 빈 공간으로 유지
-                              const SizedBox(height: 12),
+                              // 설명이 있는 경우에만 표시
+                              if (u['description'] != null && u['description'].toString().isNotEmpty) ...[
+                                Text(
+                                  u['description'],
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey[600],
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 12),
+                              ] else ...[
+                                const SizedBox(height: 12),
+                              ],
                               Row(
                                 children: [
                                   Icon(Icons.star, color: Colors.amber, size: 16),
