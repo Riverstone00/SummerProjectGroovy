@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:everycourse/services/course_service.dart';
+import 'package:everycourse/services/region_service.dart';
 import 'course_detail.dart';
-import 'seoul_page.dart';
+import 'region_page.dart';
 import 'full_univ.dart';
 import 'full_course.dart';
 import 'course_list.dart';
@@ -15,17 +16,23 @@ class ExploreScreen extends StatefulWidget {
 
 class _ExploreScreenState extends State<ExploreScreen> {
   final CourseService _courseService = CourseService();
+
+  final RegionService _regionService = RegionService();
   final PageController _pageController = PageController();
   int _currentBannerPage = 0;
+
   bool _isLoading = true;
   List<Map<String, dynamic>> _popularCourses = [];
-  List<Map<String, dynamic>> _universityRelatedCourses = [];
-  List<Map<String, dynamic>> _themeCourses = [];
 
   @override
   void initState() {
     super.initState();
     _loadCoursesFromFirebase();
+  }
+
+  // 서울 region의 실제 ID를 찾아 반환
+  Future<String?> _getSeoulRegionId() async {
+    return await _regionService.findRegionByName('서울');
   }
 
   Future<void> _loadCoursesFromFirebase() async {
@@ -45,6 +52,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
       final sortedByViews = List<Map<String, dynamic>>.from(allCourses)
         ..sort((a, b) => (b['viewcount'] ?? 0).compareTo(a['viewcount'] ?? 0));
 
+
       // 해시태그로 대학 관련 코스 필터링
       final univCourses = allCourses.where((course) {
         final hashtags = course['hashtags'] as List<dynamic>?;
@@ -59,10 +67,9 @@ class _ExploreScreenState extends State<ExploreScreen> {
             !hashtags.any((tag) => tag.toString().contains('대학'));
       }).toList();
 
+
       setState(() {
         _popularCourses = sortedByViews.take(3).toList();
-        _universityRelatedCourses = univCourses.take(5).toList();
-        _themeCourses = otherCourses.take(5).toList();
         _isLoading = false;
       });
     } catch (e) {
@@ -315,7 +322,32 @@ class _ExploreScreenState extends State<ExploreScreen> {
                 if (item == '서울') {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const SeoulPage()),
+                    MaterialPageRoute(
+                      builder: (context) => FutureBuilder<String?>(
+                        future: _getSeoulRegionId(),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return const Scaffold(
+                              body: Center(child: CircularProgressIndicator()),
+                            );
+                          }
+                          
+                          final regionId = snapshot.data;
+                          if (regionId == null) {
+                            return const Scaffold(
+                              body: Center(
+                                child: Text('서울 지역 정보를 찾을 수 없습니다.'),
+                              ),
+                            );
+                          }
+                          
+                          return RegionPage(
+                            regionId: regionId, 
+                            regionName: '서울'
+                          );
+                        },
+                      ),
+                    ),
                   );
                 } else {
                   Navigator.push(
