@@ -722,4 +722,87 @@ class CourseService {
     print('유효한 이미지 URL: $url');
     return url;
   }
+
+  // 특정 학교의 가장 조회수 높은 코스의 이미지 URL 가져오기
+  Future<String> getMostViewedCourseImageBySchool(String schoolName) async {
+    try {
+      // 1. hashtags로 검색 (orderBy 임시 제거)
+      final hashtagSnapshot = await _firestore
+          .collection('courses')
+          .where('hashtags', arrayContains: schoolName)
+          .get();
+      
+      if (hashtagSnapshot.docs.isNotEmpty) {
+        // 메모리에서 viewcount로 정렬
+        final sortedDocs = hashtagSnapshot.docs.toList()
+          ..sort((a, b) {
+            final aViewcount = (a.data()['viewcount'] as int?) ?? 0;
+            final bViewcount = (b.data()['viewcount'] as int?) ?? 0;
+            return bViewcount.compareTo(aViewcount);
+          });
+        
+        final course = sortedDocs.first.data();
+        final imageUrl = course['imageUrl'] ?? '';
+        if (imageUrl.isNotEmpty) {
+          return imageUrl;
+        }
+      }
+      
+      // 2. location으로 검색 (orderBy 임시 제거)
+      final locationSnapshot = await _firestore
+          .collection('courses')
+          .where('location', isEqualTo: schoolName)
+          .get();
+      
+      if (locationSnapshot.docs.isNotEmpty) {
+        // 메모리에서 viewcount로 정렬
+        final sortedDocs = locationSnapshot.docs.toList()
+          ..sort((a, b) {
+            final aViewcount = (a.data()['viewcount'] as int?) ?? 0;
+            final bViewcount = (b.data()['viewcount'] as int?) ?? 0;
+            return bViewcount.compareTo(aViewcount);
+          });
+        
+        final course = sortedDocs.first.data();
+        final imageUrl = course['imageUrl'] ?? '';
+        return imageUrl;
+      }
+      
+      // 3. location에 schoolName이 포함된 경우 검색 (orderBy 제거)
+      final allCoursesSnapshot = await _firestore
+          .collection('courses')
+          .get();
+      
+      final matchingCourses = <Map<String, dynamic>>[];
+      
+      for (var doc in allCoursesSnapshot.docs) {
+        final course = doc.data();
+        final location = course['location'] ?? '';
+        
+        if (location.contains(schoolName)) {
+          matchingCourses.add(course);
+        }
+      }
+      
+      if (matchingCourses.isNotEmpty) {
+        // 메모리에서 viewcount로 정렬
+        matchingCourses.sort((a, b) {
+          final aViewcount = (a['viewcount'] as int?) ?? 0;
+          final bViewcount = (b['viewcount'] as int?) ?? 0;
+          return bViewcount.compareTo(aViewcount);
+        });
+        
+        final bestCourse = matchingCourses.first;
+        final imageUrl = bestCourse['imageUrl'] ?? '';
+        if (imageUrl.isNotEmpty) {
+          return imageUrl;
+        }
+      }
+      
+      return ''; // 코스가 없으면 빈 문자열 반환
+    } catch (e) {
+      print('CourseService: 학교별 최고 조회수 코스 이미지 로드 오류: $e');
+      return '';
+    }
+  }
 }
