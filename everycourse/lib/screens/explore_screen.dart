@@ -138,7 +138,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
       },
       {
         'image':
-            'https://firebasestorage.googleapis.com/v0/b/everycourse-911af.firebasestorage.app/o/images%2Fbanner2.jpg?alt=media&token=636cbf3d-a088-460a-88cc-60d1548007c7',
+            'https://firebasestorage.googleapis.com/v0/b/everycourse-911af.firebasestorage.app/o/images%2FOrange%20Brown%20Cute%20Pet%20Shop%20Banner.png?alt=media&token=89cb994b-8af0-49d3-ac46-705d8d0a1188',
       },
       {
         'image':
